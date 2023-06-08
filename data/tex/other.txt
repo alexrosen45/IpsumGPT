@@ -1,0 +1,1269 @@
+\documentclass{article}
+\begin{document}
+First document. This is a simple example, with no 
+extra parameters or packages included.
+\end{document}
+
+\documentclass[12pt, letterpaper]{article}
+\usepackage{graphicx}
+
+\usepackage{graphicx}
+
+\documentclass[12pt, letterpaper]{article}
+\title{My first LaTeX document}
+\author{Hubert Farnsworth\thanks{Funded by the Overleaf team.}}
+\date{August 2022}
+
+\begin{document}
+\maketitle
+We have now added a title, author and date to our first \LaTeX{} document!
+\end{document}
+
+\documentclass[12pt, letterpaper]{article}
+\title{My first LaTeX document}
+\author{Hubert Farnsworth\thanks{Funded by the Overleaf team.}}
+\date{August 2022}
+\begin{document}
+\maketitle
+We have now added a title, author and date to our first \LaTeX{} document!
+\end{document}
+
+\documentclass[12pt, letterpaper]{article}
+\title{My first LaTeX document}
+\author{Hubert Farnsworth\thanks{Funded by the Overleaf team.}}
+\date{August 2022}
+\begin{document}
+\maketitle
+We have now added a title, author and date to our first \LaTeX{} document!
+
+% This line here is a comment. It will not be typeset in the document.
+\end{document}
+
+Some of the \textbf{greatest}
+discoveries in \underline{science} 
+were made by \textbf{\textit{accident}}.
+
+Some of the greatest \emph{discoveries} in science 
+were made by accident.
+
+\textit{Some of the greatest \emph{discoveries} 
+in science were made by accident.}
+
+\textbf{Some of the greatest \emph{discoveries} 
+in science were made by accident.}
+
+\documentclass{article}
+\usepackage{graphicx} %LaTeX package to import graphics
+\graphicspath{{images/}} %configuring the graphicx package
+ 
+\begin{document}
+The universe is immense and it seems to be homogeneous, 
+on a large scale, everywhere we look.
+
+% The \includegraphcs command is 
+% provided (implemented) by the 
+% graphicx package
+\includegraphics{universe}  
+ 
+There's a picture of a galaxy above.
+\end{document}
+
+\usepackage{graphicx}
+
+\documentclass{article}
+\usepackage{graphicx}
+\graphicspath{{images/}}
+ 
+\begin{document}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{mesh}
+    \caption{A nice plot.}
+    \label{fig:mesh1}
+\end{figure}
+ 
+As you can see in figure \ref{fig:mesh1}, the function grows near the origin. This example is on page \pageref{fig:mesh1}.
+
+\end{document}
+
+\documentclass{article}
+\begin{document}
+\begin{itemize}
+  \item The individual entries are indicated with a black dot, a so-called bullet.
+  \item The text in the entries may be of any length.
+\end{itemize}
+\end{document}
+
+\documentclass{article}
+\begin{document}
+\begin{enumerate}
+  \item This is the first entry in our list.
+  \item The list numbers increase with each entry we add.
+\end{enumerate}
+\end{document}
+
+\documentclass[12pt, letterpaper]{article}
+\begin{document}
+In physics, the mass-energy equivalence is stated 
+by the equation $E=mc^2$, discovered in 1905 by Albert Einstein.
+\end{document}
+
+\documentclass[12pt, letterpaper]{article}
+\begin{document}
+\begin{math}
+E=mc^2
+\end{math} is typeset in a paragraph using inline math mode---as is $E=mc^2$, and so too is \(E=mc^2\).
+\end{document}
+
+\documentclass[12pt, letterpaper]{article}
+\begin{document}
+The mass-energy equivalence is described by the famous equation
+\[ E=mc^2 \] discovered in 1905 by Albert Einstein. 
+
+In natural units ($c = 1$), the formula expresses the identity
+\begin{equation}
+E=m
+\end{equation}
+\end{document}
+
+\documentclass{article}
+\begin{document}
+Subscripts in math mode are written as $a_b$ and superscripts are written as $a^b$. These can be combined and nested to write expressions such as
+
+\[ T^{i_1 i_2 \dots i_p}_{j_1 j_2 \dots j_q} = T(x^{i_1},\dots,x^{i_p},e_{j_1},\dots,e_{j_q}) \]
+ 
+We write integrals using $\int$ and fractions using $\frac{a}{b}$. Limits are placed on integrals using superscripts and subscripts:
+
+\[ \int_0^1 \frac{dx}{e^x} =  \frac{e-1}{e} \]
+
+Lower case Greek letters are written as $\omega$ $\delta$ etc. while upper case Greek letters are written as $\Omega$ $\Delta$.
+
+Mathematical operators are prefixed with a backslash as $\sin(\beta)$, $\cos(\alpha)$, $\log(x)$ etc.
+\end{document}
+
+\usepackage{amsmath}% For the equation* environment
+
+\documentclass{article}
+\usepackage{amsmath}% For the equation* environment
+\begin{document}
+\section{First example}
+
+The well-known Pythagorean theorem \(x^2 + y^2 = z^2\) was proved to be invalid for other exponents, meaning the next equation has no integer solutions for \(n>2\):
+
+\[ x^n + y^n = z^n \]
+
+\section{Second example}
+
+This is a simple math expression \(\sqrt{x^2+1}\) inside text. 
+And this is also the same: 
+\begin{math}
+\sqrt{x^2+1}
+\end{math}
+but by using another command.
+
+This is a simple math expression without numbering
+\[\sqrt{x^2+1}\] 
+separated from text.
+
+This is also the same:
+\begin{displaymath}
+\sqrt{x^2+1}
+\end{displaymath}
+
+\ldots and this:
+\begin{equation*}
+\sqrt{x^2+1}
+\end{equation*}
+\end{document}
+
+\documentclass{article}
+\begin{document}
+\begin{abstract}
+This is a simple paragraph at the beginning of the 
+document. A brief introduction about the main subject.
+\end{abstract}
+\end{document}
+
+\documentclass{article}
+\begin{document}
+
+\begin{abstract}
+This is a simple paragraph at the beginning of the 
+document. A brief introduction about the main subject.
+\end{abstract}
+
+After our abstract we can begin the first paragraph, then press ``enter'' twice to start the second one.
+
+This line will start a second paragraph.
+
+I will start the third paragraph and then add \\ a manual line break which causes this text to start on a new line but remains part of the same paragraph. Alternatively, I can use the \verb|\newline|\newline command to start a new line, which is also part of the same paragraph.
+\end{document}
+
+\documentclass{book}
+\begin{document}
+
+\chapter{First Chapter}
+
+\section{Introduction}
+
+This is the first section.
+
+Lorem  ipsum  dolor  sit  amet,  consectetuer  adipiscing  
+elit. Etiam  lobortisfacilisis sem.  Nullam nec mi et 
+neque pharetra sollicitudin.  Praesent imperdietmi nec ante. 
+Donec ullamcorper, felis non sodales...
+
+\section{Second Section}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit.  
+Etiam lobortis facilisissem.  Nullam nec mi et neque pharetra 
+sollicitudin.  Praesent imperdiet mi necante...
+
+\subsection{First Subsection}
+Praesent imperdietmi nec ante. Donec ullamcorper, felis non sodales...
+
+\section*{Unnumbered Section}
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit.  
+Etiam lobortis facilisissem...
+\end{document}
+
+\begin{center}
+\begin{tabular}{c c c}
+ cell1 & cell2 & cell3 \\ 
+ cell4 & cell5 & cell6 \\  
+ cell7 & cell8 & cell9    
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{|c|c|c|} 
+ \hline
+ cell1 & cell2 & cell3 \\ 
+ cell4 & cell5 & cell6 \\ 
+ cell7 & cell8 & cell9 \\ 
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{center}
+ \begin{tabular}{||c c c c||} 
+ \hline
+ Col1 & Col2 & Col2 & Col3 \\ [0.5ex] 
+ \hline\hline
+ 1 & 6 & 87837 & 787 \\ 
+ \hline
+ 2 & 7 & 78 & 5415 \\
+ \hline
+ 3 & 545 & 778 & 7507 \\
+ \hline
+ 4 & 545 & 18744 & 7560 \\
+ \hline
+ 5 & 88 & 788 & 6344 \\ [1ex] 
+ \hline
+\end{tabular}
+\end{center}
+
+Table \ref{table:data} shows how to add a table caption and reference a table.
+\begin{table}[h!]
+\centering
+\begin{tabular}{||c c c c||} 
+ \hline
+ Col1 & Col2 & Col2 & Col3 \\ [0.5ex] 
+ \hline\hline
+ 1 & 6 & 87837 & 787 \\ 
+ 2 & 7 & 78 & 5415 \\
+ 3 & 545 & 778 & 7507 \\
+ 4 & 545 & 18744 & 7560 \\
+ 5 & 88 & 788 & 6344 \\ [1ex] 
+ \hline
+\end{tabular}
+\caption{Table to test captions and labels.}
+\label{table:data}
+\end{table}
+
+\documentclass{article}
+\title{Sections and Chapters}
+\author{Gubert Farnsworth}
+\date{August 2022}
+\begin{document}
+  
+\maketitle
+  
+\tableofcontents
+
+\section{Introduction}
+   
+This is the first section.
+      
+Lorem  ipsum  dolor  sit  amet,  consectetuer  adipiscing  
+elit.   Etiam  lobortisfacilisis sem.  Nullam nec mi et 
+neque pharetra sollicitudin.  Praesent imperdietmi nec ante. 
+Donec ullamcorper, felis non sodales...
+       
+\section*{Unnumbered Section}
+\addcontentsline{toc}{section}{Unnumbered Section}
+
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit.  
+Etiam lobortis facilisissem.  Nullam nec mi et neque pharetra 
+sollicitudin.  Praesent imperdiet mi necante...
+
+\section{Second Section}
+       
+Lorem ipsum dolor sit amet, consectetuer adipiscing elit.  
+Etiam lobortis facilisissem.  Nullam nec mi et neque pharetra 
+sollicitudin.  Praesent imperdiet mi necante...
+\end{document}
+
+\usepackage{graphicx}
+
+\usepackage[options]{somepackage}
+
+\usepackage[total={6.5in,8.75in},
+top=1.2in, left=0.9in, includefoot]{geometry}
+
+\usepackage{somepackage}
+
+\documentclass[12pt, letterpaper]{article}
+\usepackage{somepackage}% a NON-EXISTENT package
+\begin{document}
+This will fail!
+\end{document}
+
+\begin{center}
+Example 1: The following paragraph (given in quotes) is an 
+example of centred alignment using the center environment. 
+
+``La\TeX{} is a document preparation system and document markup 
+language. \LaTeX{} uses the \TeX{} typesetting program for formatting 
+its output, and is itself written in the \TeX{} macro language. 
+\LaTeX{} is not the name of a particular (executable) typesetting program, but 
+refers to the suite of commands (\TeX{} macros) which form the markup 
+conventions used to typeset \LaTeX{} documents."
+\end{center}
+
+This is text contained in the first paragraph. 
+This is text contained in the first paragraph. 
+This is text contained in the first paragraph.\par
+This is text contained in the second paragraph. 
+This is text contained in the second paragraph.
+This is text contained in the second paragraph.
+
+\section*{A paragraph typeset flush left}
+
+\begin{flushleft}
+La\TeX{} is a document preparation system and document markup 
+language. \LaTeX{} uses the \TeX{} typesetting program for formatting 
+its output, and is itself written in the \TeX{} macro language. 
+\LaTeX{} is not the name of a particular (executable) typesetting program, but 
+refers to the suite of commands (\TeX{} macros) which form the markup 
+conventions used to typeset \LaTeX{} documents.
+\end{flushleft}
+
+\section*{A paragraph typeset flush right}
+
+\begin{flushright}
+La\TeX{} is a document preparation system and document markup 
+language. \LaTeX{} uses the \TeX{} typesetting program for formatting 
+its output, and is itself written in the \TeX{} macro language. 
+\LaTeX{} is not the name of a particular (executable) typesetting program, but 
+refers to the suite of commands (\TeX{} macros) which form the markup 
+conventions used to typeset \LaTeX{} documents.
+\end{flushright}
+
+\section*{A fully justified  typeset paragraph} 
+\LaTeX{} is not the name of a particular (executable) typesetting program, but refers to the suite of commands (\TeX{} macros) which form the markup 
+conventions used to typeset \LaTeX{} documents.
+
+\section*{A paragraph typeset using \texttt{\string\raggedright}}
+
+\begingroup
+\raggedright 
+\LaTeX{} is not the name of a particular (executable) typesetting program, but refers to the suite of commands (\TeX{} macros) which form the markup 
+conventions used to typeset \LaTeX{} documents.
+
+\endgroup
+
+\section*{A paragraph typeset using \texttt{\string\raggedleft}}
+
+\begingroup
+\raggedleft 
+\LaTeX{} is not the name of a particular (executable) typesetting program, but refers to the suite of commands (\TeX{} macros) which form the markup 
+conventions used to typeset \LaTeX{} documents.
+
+\endgroup
+
+\section*{A paragraph typeset using \texttt{\string\centering}}
+
+\begingroup
+\centering 
+\LaTeX{} is not the name of a particular (executable) typesetting program, but refers to the suite of commands (\TeX{} macros) which form the markup 
+conventions used to typeset \LaTeX{} documents.
+
+\endgroup
+
+\setlength{\parindent}{20pt}
+
+\setlength{\parindent}{20pt}
+
+\section*{This is a section}
+\textbf{First paragraph} of a section which, as you can see, is not indented. This is more text in the paragraph. This is more text in the paragraph.
+
+\textbf{Second paragraph}. As you can see it is indented. This is more text in the paragraph. This is more text in the paragraph. 
+
+\noindent\textbf{Third paragraph}. This too is not indented due to use of \texttt{\string\noindent}. This is more text in the paragraph. This is more text in the paragraph.  The current value of \verb|\parindent| is \the\parindent. This is more text in the paragraph.
+
+\documentclass{article}
+% Using the geometry package with a small
+% page size to create the article graphic
+\usepackage[paperheight=6in,
+   paperwidth=5in,
+   top=10mm,
+   bottom=20mm,
+   left=10mm,
+   right=10mm]{geometry}
+\begin{document}
+\noindent A new paragraph with some text, then an \verb|\indent|\indent command. Next, some inline math which also has an indent $y\indent x$. \verb|\indent| also works when used in an \verb|\hbox| such as \verb|\hbox{A\indent B}| which produces \hbox{A\indent B}.
+\end{document}
+
+Some of the \textbf{greatest} 
+discoveries in \underline{science} 
+were made by \textbf{\textit{accident}}.
+
+Some of the greatest 
+discoveries in science 
+were made by \emph{accident}.
+
+Some of the \textbf{greatest} 
+discoveries in science 
+were made by accident.
+
+Some of the greatest 
+discoveries in \underline{science} 
+were made by accident.
+
+Some of the greatest \emph{discoveries} 
+in science 
+were made by accident.
+
+\textit{Some of the greatest \emph{discoveries} 
+in science 
+were made by accident.}
+
+\textbf{Some of the greatest \emph{discoveries} 
+in science 
+were made by accident.}
+
+First example, bold, italics and underline:
+
+Some of the \textbf{greatest} discoveries in \underline{science} were made by \textbf{\emph{accident}}.
+
+\vspace{1.5cm}
+
+Example of italicized text: 
+
+Some of the greatest discoveries in science were made by \emph{accident}.
+
+\vspace{1.5cm}
+
+Example of boldface text:
+
+Some of the \textbf{greatest} discoveries in science were made by accident.
+
+\vspace{1.5cm}
+
+Example of underlined text:
+
+Some of the greatest discoveries in \underline{science} were made by accident.
+
+\vspace{1.5cm}
+
+Example of emphasized text in different contexts:
+
+Some of the greatest \emph{discoveries} in science were made by accident.
+
+\textit{Some of the greatest \emph{discoveries} in science were made by accident.}
+
+\textbf{Some of the greatest \emph{discoveries} in science were made by accident.}
+
+Lists are easy to create:
+\begin{itemize}
+  \item List entries start with the \verb|\item| command.
+  \item Individual entries are indicated with a black dot, a so-called bullet.
+  \item The text in the entries may be of any length.
+\end{itemize}
+
+Numbered (ordered) lists are easy to create:
+\begin{enumerate}
+  \item Items are numbered automatically.
+  \item The numbers start at 1 with each use of the \texttt{enumerate} environment.
+  \item Another entry in the list
+\end{enumerate}
+
+\item[label text] Text of your description goes here...
+
+\usepackage[english]{babel}
+
+\documentclass{article}
+\usepackage[english]{babel} % To obtain English text with the blindtext package
+\usepackage{blindtext}
+\begin{document}
+
+\begin{description}
+   \item This is an entry \textit{without} a label.
+   \item[Something short] A short one-line description.
+   \item[Something long] A much longer description. \blindtext[1]
+\end{description}
+\end{document}
+
+\item[label text] Text of your entry goes here...
+
+Change the labels using \verb|\item[label text]| in an \texttt{itemize} environment
+\begin{itemize}
+  \item This is my first point
+  \item Another point I want to make 
+  \item[!] A point to exclaim something!
+  \item[$\blacksquare$] Make the point fair and square.
+  \item[NOTE] This entry has no bullet
+  \item[] A blank label?
+\end{itemize}
+
+\vspace{10pt}
+
+Change the labels using \verb|\item[label text]| in an \texttt{enumerate} environment
+\begin{enumerate}
+  \item This is my first point
+  \item Another point I want to make 
+  \item[!] A point to exclaim something!
+  \item[$\blacksquare$] Make the point fair and square.
+  \item[NOTE] This entry has no bullet
+  \item[] A blank label?
+\end{enumerate}
+
+\begin{enumerate}
+   \item The labels consists of sequential numbers
+   \begin{itemize}
+     \item The individual entries are indicated with a black dot, a so-called bullet
+     \item The text in the entries may be of any length
+     \begin{description}
+     \item[Note:] I would like to describe something here
+     \item[Caveat!] And give a warning here
+     \end{description}
+   \end{itemize}
+   \item The numbers starts at 1 with each use of the \texttt{enumerate} environment
+\end{enumerate}
+
+\begin{enumerate}
+   \item First level item
+   \item First level item
+   \begin{enumerate}
+     \item Second level item
+     \item Second level item
+     \begin{enumerate}
+       \item Third level item
+       \item Third level item
+       \begin{enumerate}
+         \item Fourth level item
+         \item Fourth level item
+       \end{enumerate}
+     \end{enumerate}
+   \end{enumerate}
+ \end{enumerate}
+ 
+ \begin{itemize}
+   \item First level item
+   \item First level item
+   \begin{itemize}
+     \item Second level item
+     \item Second level item
+     \begin{itemize}
+       \item Third level item
+       \item Third level item
+       \begin{itemize}
+         \item Fourth level item
+         \item Fourth level item
+       \end{itemize}
+     \end{itemize}
+   \end{itemize}
+ \end{itemize}
+ 
+ \documentclass{article}
+\begin{document}
+\renewcommand{\labelenumii}{\arabic{enumi}.\arabic{enumii}}
+\renewcommand{\labelenumiii}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}}
+\renewcommand{\labelenumiv}{\arabic{enumi}.\arabic{enumii}.\arabic{enumiii}.\arabic{enumiv}}
+
+\begin{enumerate}
+\item One
+\item Two
+\item Three
+\begin{enumerate}
+    \item Three point one
+    \begin{enumerate}
+    \item Three point one, point one
+        \begin{enumerate}
+        \item Three point one, point one, point one
+        \item Three point one, point one, point two
+        \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
+\item Four
+\item Five
+\end{enumerate}
+
+\end{document}
+
+\documentclass{article}
+\begin{document}
+\begin{verbatim}
+\newcounter{foo}
+\setcounter{foo}{5}    
+\end{verbatim}
+\newcounter{foo}
+\setcounter{foo}{5} 
+
+\begin{itemize}
+\item \verb|\arabic{foo}| produces \arabic{foo}
+\item \verb|\roman{foo}| produces \roman{foo} 
+\item \verb|\Roman{foo}| produces \Roman{foo}
+\item \verb|\Alph{foo}| produces \Alph{foo}
+\item \verb|\alph{foo}| produces \alph{foo}
+\end{itemize}
+
+\end{document}
+
+\renewcommand{\labelenumi}{\duck{enumi}}
+\renewcommand{\labelenumii}{\duck{enumi}.\duckegg{enumii}}
+\renewcommand{\labelenumiii}{\duck{enumi}.\duckegg{enumii}.\duckegg{enumiii}}
+\renewcommand{\labelenumiv}{\duck{enumi}.\duckegg{enumii}.\duckegg{enumiii}.\duckchick{enumiv}} 
+
+\begin{enumerate}
+\item A duck
+\item More ducks
+\item A flurry of ducks
+\begin{enumerate}
+    \item Ducks and eggs
+    \begin{enumerate}
+    \item Do I see... 
+    \item Ducks and pre-ducks 
+       \begin{enumerate}
+       \item Awww...
+       \item So cute!
+       \end{enumerate}
+    \end{enumerate}
+\end{enumerate}
+\item Back to ducks
+\item Again
+\end{enumerate}
+
+\documentclass{article}
+\usepackage{layouts}
+\begin{document}
+\begin{figure}
+\listdiagram
+\caption{The \LaTeX{} parameters which define typesetting and layout of lists.} 
+\end{figure}
+\end{document}
+
+\documentclass{article}
+\begin{document}
+\newcounter{boxlblcounter}  
+\newcommand{\makeboxlabel}[1]{\fbox{#1.}\hfill}% \hfill fills the label box
+\newenvironment{boxlabel}
+  {\begin{list}
+    {\arabic{boxlblcounter}}
+    {\usecounter{boxlblcounter}
+     \setlength{\labelwidth}{3em}
+     \setlength{\labelsep}{0em}
+     \setlength{\itemsep}{2pt}
+     \setlength{\leftmargin}{1.5cm}
+     \setlength{\rightmargin}{2cm}
+     \setlength{\itemindent}{0em} 
+     \let\makelabel=\makeboxlabel
+    }
+  }
+{\end{list}}
+
+\newcommand{\randomtext}{Hello, here is some text without a meaning. Hello, here is some text without a meaning. Hello, here is some text without a meaning.}
+
+\noindent\randomtext
+
+\begin{boxlabel}
+\item \randomtext
+\item \randomtext
+\item \randomtext
+\end{boxlabel}
+\end{document}
+
+\usepackage[shortlabels]{enumitem}
+
+\documentclass{article}
+\usepackage{enumitem}
+
+\begin{document}
+
+\newcommand{\randomtext}{Hello, here is some text without a meaning. Hello, here is some text without a meaning.}
+
+\section*{Using LaTeX's default settings for \texttt{itemize}}
+
+\randomtext
+
+\begin{itemize}
+\item \randomtext
+   \begin{itemize}
+      \item \randomtext
+        \begin{itemize}
+        \item \randomtext
+        \end{itemize}
+   \item \randomtext
+   \end{itemize}
+\item \randomtext
+\end{itemize}
+
+\section*{Using a custom \texttt{itemize} via \texttt{enumitem}}
+
+\subsection*{Note the effect of left and right margin settings}
+
+\randomtext
+
+\begin{itemize}[leftmargin=30pt, rightmargin=2cm]
+\item \randomtext
+   \begin{itemize}
+      \item \randomtext
+        \begin{itemize}
+        \item \randomtext
+        \end{itemize}
+   \item \randomtext
+   \end{itemize}
+\item \randomtext
+\end{itemize}
+
+\end{document}
+
+\newlist{name}{list-type}{max-depth}
+
+\newlist{myitems}{enumerate}{3}
+
+\documentclass{article}
+\usepackage{enumitem}
+\begin{document}
+
+\newcommand{\randomtext}{Hello, here is some text without a meaning. Hello, here is some text without a meaning.}
+
+\newcommand{\shortrandomtext}{Hello, here is some text.}
+% Create a custom list based on enumerate
+% It is called "myitems"
+% We'll create a list that is 3 levels deep
+\newlist{myitems}{enumerate}{3}
+
+% Configure the behaviour of level 1 entries
+% NOTE: we use the list counter "myitemsi"
+\setlist[myitems, 1]
+{label=\arabic{myitemsi}., %1., 2., 3., ...
+leftmargin=\parindent,
+rightmargin=10pt
+}
+
+% Configure the behaviour of level 2 entries
+% NOTE: we use the list counter "myitemsii"
+\setlist[myitems, 2]
+{label=\arabic{myitemsi}.\arabic{myitemsii}, %1.1, 1.2, 1.3...
+leftmargin=15pt,
+rightmargin=15pt}
+
+% Configure the behaviour of level 3 entries
+% NOTE: we use the list counter "myitemsiii"
+\setlist[myitems, 3]
+% Use a label of 1.1:<kern>(a), 1.1:<kern>(b) etc  
+{label=\arabic{myitemsi}.\arabic{myitemsii}:\kern1.5pt(\alph{myitemsiii}),
+leftmargin=30pt,
+rightmargin=30pt}
+
+\randomtext
+\begin{myitems}
+\item \randomtext
+    \begin{myitems}
+    \item \randomtext
+        \begin{myitems}
+        \item \randomtext
+        \item \randomtext
+        \end{myitems}
+    \item \shortrandomtext
+    \item \shortrandomtext
+    \end{myitems}
+\item \randomtext
+\end{myitems}
+\end{document}
+
+\documentclass{article}
+\usepackage{enumitem}
+
+\begin{document}
+
+\newlist{contract}{enumerate}{10}
+\setlist[contract]{label*=\arabic*.}
+\setlistdepth{10} 
+
+\section*{Custom list nested to 10 levels deep!}
+
+\begin{contract}
+\item Level 1
+ \begin{contract}
+ \item Level 2
+   \begin{contract}
+   \item Level 3
+     \begin{contract}
+     \item Level 4
+       \begin{contract}
+       \item Level 5
+        \begin{contract}
+        \item Level 6
+         \begin{contract}
+         \item Level 7
+          \begin{contract}
+          \item Level 8
+           \begin{contract}
+           \item Level 9
+            \begin{contract}
+            \item Level 10
+          \end{contract}
+         \end{contract}
+        \end{contract}
+       \end{contract}
+      \end{contract}
+     \end{contract}
+    \end{contract}
+   \end{contract}
+  \end{contract}
+ \end{contract}
+\end{document}
+
+% Declare a new itemize-based list via enumitem
+\newlist{myEnumerate}{itemize}{6}
+
+% The nosep option removes all vertical spacing
+% the label=\protect\mpbullet causes all bullets to be 
+% drawn by a macro that uses MetaPost code. \protect
+% is required as noted in the enumitem manual 
+
+\setlist[myEnumerate]{nosep,label=\protect\mpbullet}
+\setlistdepth{6}
+
+\begin{myEnumerate}
+\item Level 1
+  \begin{myEnumerate}
+   \item Level 2
+    \begin{myEnumerate}
+     \item Level 3
+      \begin{myEnumerate}
+       \item Level 4
+        \begin{myEnumerate}
+         \item Level 5
+          \begin{myEnumerate}
+           \item Level 6
+           \end{myEnumerate}
+        \end{myEnumerate}
+       \end{myEnumerate}
+    \end{myEnumerate}
+   \end{myEnumerate}
+\end{myEnumerate}
+
+\newlist{todolist}{itemize}{2}
+
+\begin{itemize}
+  \item Start thinking about what we hope to achieve
+  \begin{todolist}
+  \item[\mpdot] Identify objectives
+  \item[\mpyingyang] Balance environmental impact 
+  \item[\mpsquare{0}{5}{0}] Implement plans
+    \begin{todolist}
+    \item[\mpsquare{-0.5}{4}{0}] Stage 1 plans
+    \item[\mpsquare{-0.5}{4}{-20}] Stage 2 plans
+    \item[\mpsquare{-0.5}{4}{-40}] Stage 3 plans
+    \item[\mpsquare{-0.5}{4}{-60}] Stage 4 plans
+    \end{todolist}
+  \end{todolist}
+\end{itemize}
+
+\documentclass{article}
+\begin{document}
+
+The well known Pythagorean theorem \(x^2 + y^2 = z^2\) was 
+proved to be invalid for other exponents. 
+Meaning the next equation has no integer solutions:
+
+\[ x^n + y^n = z^n \]
+
+\end{document}
+
+\documentclass{article}
+\begin{document}
+
+\noindent Standard \LaTeX{} practice is to write inline math by enclosing it between \verb|\(...\)|:
+
+\begin{quote}
+In physics, the mass-energy equivalence is stated 
+by the equation \(E=mc^2\), discovered in 1905 by Albert Einstein.
+\end{quote}
+
+\noindent Instead if writing (enclosing) inline math between \verb|\(...\)| you can use \texttt{\$...\$} to achieve the same result:
+
+\begin{quote}
+In physics, the mass-energy equivalence is stated 
+by the equation $E=mc^2$, discovered in 1905 by Albert Einstein.
+\end{quote}
+
+\noindent Or, you can use \verb|\begin{math}...\end{math}|:
+
+\begin{quote}
+In physics, the mass-energy equivalence is stated 
+by the equation \begin{math}E=mc^2\end{math}, discovered in 1905 by Albert Einstein.
+\end{quote}
+\end{document}
+
+\documentclass{article}
+\begin{document}
+The mass-energy equivalence is described by the famous equation
+
+\[E=mc^2\]
+
+discovered in 1905 by Albert Einstein. 
+In natural units ($c$ = 1), the formula expresses the identity
+
+\begin{equation}
+E=m
+\end{equation}
+\end{document}
+
+\documentclass{article}
+\usepackage{amsmath} % for the equation* environment
+\begin{document}
+
+This is a simple math expression \(\sqrt{x^2+1}\) inside text. 
+And this is also the same: 
+\begin{math}
+\sqrt{x^2+1}
+\end{math}
+but by using another command.
+
+This is a simple math expression without numbering
+\[\sqrt{x^2+1}\] 
+separated from text.
+
+This is also the same:
+\begin{displaymath}
+\sqrt{x^2+1}
+\end{displaymath}
+
+\ldots and this:
+\begin{equation*}
+\sqrt{x^2+1}
+\end{equation*}
+
+\end{document}
+
+\[ \int\limits_0^1 x^2 + y^2 \ dx \]
+
+\[ \int_0^1 x^2 + y^2 \ dx \]
+
+\[ a_1^2 + a_2^2 = a_3^2 \]
+
+\[ x^{2 \alpha} - 1 = y_{ij} + y_{ij}  \]
+
+\[ (a^n)^{r+s} = a^{nr+ns}  \]
+
+
+\[ \sum_{i=1}^{\infty} \frac{1}{n^s} 
+= \prod_p \frac{1}{1 - p^{-s}} \]
+
+Here are some examples of simple usage of subscripts and superscripts:
+
+\[ \int\limits_0^1 x^2 + y^2 \ dx \]
+
+\vspace{1cm}
+
+Using superscript and subscripts in the same expression
+
+\[ a_1^2 + a_2^2 = a_3^2 \]
+
+\vspace{1cm}
+
+Longer subscripts and superscripts:
+
+\[ x^{2 \alpha} - 1 = y_{ij} + y_{ij}  \]
+
+\vspace{1cm}
+
+Nested subscripts and superscripts
+
+\[ (a^n)^{r+s} = a^{nr+ns} \]
+
+\vspace{1cm}
+
+Example of a mathematical equation with subscripts and superscripts
+
+\[ \sum_{i=1}^{\infty} \frac{1}{n^s} = \prod_p \frac{1}{1 - p^{-s}} \]
+
+\vspace{1cm}
+
+Squared root usage
+
+\[ \sqrt[4]{4ac} = \sqrt{4ac}\sqrt{4ac} \]
+
+\text{sequence}a_{n_i}
+
+\text{integral}\int_{i=1}^n
+
+\text{sum or summation}\sum_{i=1}^{\infty}
+
+\text{product}\prod_{i=1}^n
+
+\text{union or cup}\cup_{i=1}^n
+
+\text{intersection or cap}\cap_{i=1}^n
+
+\oint_{i=1}^n
+
+\text{coproduct or co-product}\coprod_{i=1}^n
+
+\[ 
+F = G \left( \frac{m_1 m_2}{r^2} \right)
+\]
+
+\[ 
+ \left[  \frac{ N } { \left( \frac{L}{p} \right)  - (m+n) }  \right]
+\]
+
+\begin{align*}
+y  = 1 + & \left(  \frac{1}{x} + \frac{1}{x^2} + \frac{1}{x^3} + \ldots  \\
+  & \quad  + \frac{1}{x^{n-1}} + \frac{1}{x^n} \right)
+\end{align*}
+
+\begin{align*}
+y  = 1 + & \left(  \frac{1}{x} + \frac{1}{x^2} + \frac{1}{x^3} + \ldots \right. \\
+  &\left. \quad + \frac{1}{x^{n-1}} + \frac{1}{x^n} \right)
+\end{align*}
+
+\[
+ \Biggl \langle 3x+7 \biggr \rangle
+\]
+
+\text{left bracket}\bigl( \Bigl( \biggl( \Biggl(
+
+\text{right bracket square}\bigr] \Bigr] \biggr] \Biggr]
+
+\text{left bracket curly}\bigl\{ \Bigl\{ \biggl\{ \Biggl\{
+
+\text{left bracket angled innerproduct dotproduct}\bigl \langle \Bigl \langle \biggl \langle \text{right bracket angled innerproduct dotproduct}\Biggl \langle
+
+\bigr \rangle \Bigr \rangle \biggr \rangle \Biggr \rangle
+
+\text{absolute value}\big| \Big| \bigg| \Bigg|
+
+\big\| \Big\| \bigg\| \Bigg\|
+
+\text{left ceiling function}\bigl \lceil \Bigl \lceil \biggl \lceil \Biggl \lceil
+
+\text{right ceiling funcntion}\bigr \rceil \Bigr \rceil \biggr \rceil \Biggr \rceil
+
+\text{left floor function}\bigl \lfloor \Bigl \lfloor \biggl \lfloor \Biggl \lfloor
+
+\text{right floor function}\bigr \rfloor \Bigr \rfloor \biggr \rfloor \Biggr \rfloor
+
+\text{plain matrix no sides}\begin{matrix}
+1 & 2 & 3\\
+a & b & c
+\end{matrix}
+
+\text{parentheses round brackets matrix}\begin{pmatrix}
+1 & 2 & 3\\
+a & b & c
+\end{pmatrix}
+
+\text{brackets square brackets matrix}\begin{bmatrix}
+1 & 2 & 3\\
+a & b & c
+\end{bmatrix}
+
+\text{braces curly brackets matrix}\begin{Bmatrix}
+1 & 2 & 3\\
+a & b & c
+\end{Bmatrix}
+
+\text{pipes matrix}\begin{vmatrix}
+1 & 2 & 3\\
+a & b & c
+\end{vmatrix}
+
+\text{double pipes matrix}\begin{Vmatrix}
+1 & 2 & 3\\
+a & b & c
+\end{Vmatrix}
+
+\left\lceil
+\begin{matrix}
+1 & 2 & 3\\
+a & b & c
+\end{matrix}
+\right\rceil
+
+\left\langle
+\begin{matrix}
+1 & 2 & 3\\
+a & b & c
+\end{matrix}
+\right\rvert
+
+\left\langle
+\begin{matrix}
+1 & 2 & 3\\
+a & b & c
+\end{matrix}
+\right\rangle
+
+\documentclass{article}
+\usepackage{amsmath}
+\begin{document}
+\noindent Trying to typeset an inline matrix here:
+ $\begin{pmatrix}
+  a & b\\ 
+  c & d
+\end{pmatrix}$,  
+but it looks too big, so let's try 
+$\big(\begin{smallmatrix}
+  a & b\\
+  c & d
+\end{smallmatrix}\big)$ 
+instead.
+\end{document}
+
+\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b & c \\
+d & e & f \\
+g & h & i \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b & c & d \\
+e & f & g & h \\
+i & j & k & l \\
+m & n & o & p \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b & c & d & e \\
+f & g & h & i & j \\
+k & l & m & n & o \\
+p & q & r & s & t \\
+u & v & w & x & y \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a \\
+b \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b & c \\
+d & e & f \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b \\
+c & d \\
+e & f \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b & c & d \\
+e & f & g & h \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b \\
+c & d \\
+e & f \\
+g & h \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b & c & d \\
+e & f & g & h \\
+i & j & k & l \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b & c \\
+d & e & f \\
+g & h & i \\
+j & k & l \\
+\end{bmatrix}
+
+\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 1 & 0 \\
+0 & 0 & 1 \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & 0 & 0 \\
+0 & b & 0 \\
+0 & 0 & c \\
+\end{bmatrix}
+
+\begin{bmatrix}
+0 & 0 & 0 \\
+0 & 0 & 0 \\
+0 & 0 & 0 \\
+\end{bmatrix}
+
+\begin{bmatrix}
+a & b \\
+c & d \\
+\end{bmatrix}
+
+\begin{pmatrix}
+a & b \\
+c & d \\
+\end{pmatrix}
+
+\begin{pmatrix}
+a & b \\
+c & d \\
+\end{pmatrix}
+
+\begin{pmatrix}
+a & b \\
+c & d \\
+\end{pmatrix}
+
+\begin{vmatrix}
+a & b \\
+c & d \\
+\end{vmatrix}
+
+\begin{Vmatrix}
+a & b \\
+c & d \\
+\end{Vmatrix}
+
+\begin{matrix}
+a & b & c \\
+d & e & f \\
+g & h & i \\
+\end{matrix}
+
+\left[ \begin{array}{ccc|c}
+a & b & c & j \\
+d & e & f & k \\
+g & h & i & l \\
+\end{array} \right]
