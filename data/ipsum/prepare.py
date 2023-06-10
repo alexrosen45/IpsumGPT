@@ -1,37 +1,41 @@
 import os
 import pickle
-import requests
 import numpy as np
+from tensorflow.keras.preprocessing.text import Tokenizer
 
-# load latex dataset
-input_file_path = os.path.join(os.path.dirname(__file__), 'input.txt')
-if not os.path.exists(input_file_path):
-    data_url = '' # DATA URL HERE
-    with open(input_file_path, 'w') as f:
-        f.write(requests.get(data_url).text)
+# train test split ratio for training data
+SPLIT_RATIO = 0.8
+# char level constant for Keras tokenizer
+# set to True for 'character level' tokenization,
+# or False for 'word level' tokenization
+# see https://huggingface.co/docs/transformers/tokenizer_summary
+CHAR_LEVEL = False
 
-with open(input_file_path, 'r') as f:
+# load dataset
+dataset_path = os.path.join(os.path.dirname(__file__), 'input.txt')
+with open(dataset_path, 'r') as f:
     data = f.read()
-print(f"length of dataset in characters: {len(data):,}")
 
-# get all the unique characters that occur in this text
-chars = sorted(list(set(data)))
-vocab_size = len(chars)
-print("all the unique characters:", ''.join(chars))
-print(f"vocab size: {vocab_size:,}")
+# tokenization (filters no characters)
+# for automatic punctuation filtering, remove filters argument
+tokenizer = Tokenizer(char_level=False, filters='')
+tokenizer.fit_on_texts([data])
 
-# create a mapping from characters to integers
-stoi = { ch:i for i,ch in enumerate(chars) }
-itos = { i:ch for i,ch in enumerate(chars) }
-def encode(s):
-    return [stoi[c] for c in s] # encoder: take a string, output a list of integers
-def decode(l):
-    return ''.join([itos[i] for i in l]) # decoder: take a list of integers, output a string
+vocab_size = len(tokenizer.word_index) + 1  # +1 from reserved 0 index for padding
+print(f'{vocab_size} unique words.')
 
-# create the train and test splits
-n = len(data)
-train_data = data[:int(n*0.9)]
-val_data = data[int(n*0.9):]
+# stoi (string to integer) and itos (integer to string) mappings
+stoi = tokenizer.word_index
+itos = {v: k for k, v in stoi.items()}
+
+# encoder: take a string, output a list of integers
+encode = lambda s: tokenizer.texts_to_sequences([s])[0]
+# decoder: take a list of integers, output a string
+decode = lambda l: ' '.join([itos[i] for i in l])
+
+# train test splits
+train_data = data[:int(len(data) * SPLIT_RATIO)]
+val_data = data[int(len(data) * SPLIT_RATIO):]
 
 # encode both to integers
 train_ids = encode(train_data)
@@ -53,10 +57,3 @@ meta = {
 }
 with open(os.path.join(os.path.dirname(__file__), 'meta.pkl'), 'wb') as f:
     pickle.dump(meta, f)
-
-# length of dataset in characters:  1115394
-# all the unique characters:
-#  !$&',-.3:;?ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz
-# vocab size: 65
-# train has 1003854 tokens
-# val has 111540 tokens

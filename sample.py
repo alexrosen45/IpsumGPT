@@ -7,6 +7,7 @@ from contextlib import nullcontext
 import torch
 import tiktoken
 from models.model import GPTConfig, GPT
+from tensorflow.keras.preprocessing.text import Tokenizer
 
 # -----------------------------------------------------------------------------
 init_from = 'resume' # either 'resume' (from an out_dir) or a gpt2 variant (e.g. 'gpt2-xl')
@@ -62,10 +63,25 @@ if load_meta:
     print(f"Loading meta from {meta_path}...")
     with open(meta_path, 'rb') as f:
         meta = pickle.load(f)
-    # TODO want to make this more general to arbitrary encoder/decoder schemes
-    stoi, itos = meta['stoi'], meta['itos']
-    encode = lambda s: [stoi[c] for c in s]
-    decode = lambda l: ''.join([itos[i] for i in l])
+
+    # load dataset
+    dataset_path = os.path.join(os.path.dirname(__file__), 'data/ipsum/input.txt')
+    with open(dataset_path, 'r') as f:
+        data = f.read()
+
+    # tokenization (filters no characters)
+    # for automatic punctuation filtering, remove filters argument
+    tokenizer = Tokenizer(char_level=False, filters='')
+    tokenizer.fit_on_texts([data])
+
+    # stoi (string to integer) and itos (integer to string) mappings
+    stoi = tokenizer.word_index
+    itos = {v: k for k, v in stoi.items()}
+
+    # encoder: take a string, output a list of integers
+    encode = lambda s: tokenizer.texts_to_sequences([s])[0]
+    # decoder: take a list of integers, output a string
+    decode = lambda l: ' '.join([itos[i] for i in l])
 else:
     # ok let's assume gpt-2 encodings by default
     print("No meta.pkl found, assuming GPT-2 encodings...")
