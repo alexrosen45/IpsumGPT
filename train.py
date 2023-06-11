@@ -1,7 +1,7 @@
 import os
+import argparse
 import time
 import math
-import pickle
 from contextlib import nullcontext
 
 import numpy as np
@@ -11,54 +11,59 @@ from torch.distributed import init_process_group, destroy_process_group
 
 from models.model import GPTConfig, GPT
 
-# -----------------------------------------------------------------------------
-# default config values designed to train a gpt2 (124M) on OpenWebText
-# I/O
 out_dir = 'out'
-eval_interval = 2000
-log_interval = 1
+eval_interval = 250 # keep frequent because we'll overfit
 eval_iters = 200
+log_interval = 10 # just for printing to console
+
 eval_only = False # if True, script exits right after the first eval
-always_save_checkpoint = True # if True, always save a checkpoint after each eval
+always_save_checkpoint = False # save checkpoint regardless of improvement
 init_from = 'scratch' # 'scratch' or 'resume' or 'gpt2*'
 # wandb logging
-wandb_log = False # disabled by default
-wandb_project = 'owt'
-wandb_run_name = 'gpt2' # 'run' + str(time.time())
+wandb_log = False # override via command line if you like
+wandb_project = 'ipsum'
+wandb_run_name = 'mini-gpt'
 # data
-dataset = 'openwebtext'
-gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
-batch_size = 12 # if gradient_accumulation_steps > 1, this is the micro-batch size
-block_size = 1024
+dataset = 'ipsum'
+gradient_accumulation_steps = 1
+batch_size = 64
+block_size = 256 # context of up to 256 previous characters
 # model
-n_layer = 12
-n_head = 12
-n_embd = 768
-dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
+n_layer = 6
+n_head = 6
+n_embd = 384
+dropout = 0.2 # lots of finetuning
 bias = False # do we use bias inside LayerNorm and Linear layers?
 # adamw optimizer
-learning_rate = 6e-4 # max learning rate
-max_iters = 600000 # total number of training iterations
+learning_rate = 1e-3 # max learning rate
+max_iters = 5000 # total number of training iterations
 weight_decay = 1e-1
 beta1 = 0.9
-beta2 = 0.95
+beta2 = 0.99
 grad_clip = 1.0 # clip gradients at this value, or disable if == 0.0
 # learning rate decay settings
 decay_lr = True # whether to decay the learning rate
-warmup_iters = 2000 # how many steps to warm up for
-lr_decay_iters = 600000 # should be ~= max_iters per Chinchilla
-min_lr = 6e-5 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
+warmup_iters = 0 # how many steps to warm up for
+lr_decay_iters = 5000 # should be ~= max_iters per Chinchilla
+min_lr = 1e-4 # minimum learning rate, should be ~= learning_rate/10 per Chinchilla
 # DDP settings
 backend = 'nccl' # 'nccl', 'gloo', etc.
 # system
 device = 'cuda' # examples: 'cpu', 'cuda', 'cuda:0', 'cuda:1' etc., or try 'mps' on macbooks
 dtype = 'bfloat16' # 'float32', 'bfloat16', or 'float16', the latter will auto implement a GradScaler
 compile = True # use PyTorch 2.0 to compile the model to be faster
-# -----------------------------------------------------------------------------
+# # -----------------------------------------------------------------------------
 config_keys = [k for k,v in globals().items() if not k.startswith('_') and isinstance(v, (int, float, bool, str))]
-exec(open('configurator.py').read()) # overrides from command line or config file
+# exec(open('configurator.py').read()) # overrides from command line or config file
 config = {k: globals()[k] for k in config_keys} # will be useful for logging
-# -----------------------------------------------------------------------------
+# # -----------------------------------------------------------------------------
+
+# parse optional command line arguments
+parser = argparse.ArgumentParser(description="out directory")
+parser.add_argument('--out_dir', type=str, help='Out directory of model (ex. --out_dir="out-ipsum")')
+args = parser.parse_args()
+if args.out_dir is not None:
+    out_dir = args.out_dir
 
 # various inits, derived attributes, I/O setup
 ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
@@ -83,6 +88,8 @@ print(f"tokens per iteration will be: {tokens_per_iter:,}")
 
 if master_process:
     os.makedirs(out_dir, exist_ok=True)
+if not torch.cuda.is_available():
+    print("WARNING: CUDA not available with torch, using CPU instead")
 torch.manual_seed(1337 + seed_offset)
 torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
 torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
@@ -112,12 +119,11 @@ iter_num = 0
 best_loss = 1e9
 
 # attempt to derive vocab_size from the dataset
-meta_path = os.path.join(data_dir, 'meta.pkl')
+meta_path = os.path.join(data_dir, 'meta.npz')
 meta_vocab_size = None
 if os.path.exists(meta_path):
-    with open(meta_path, 'rb') as f:
-        meta = pickle.load(f)
-    meta_vocab_size = meta['vocab_size']
+    meta = np.load(meta_path, allow_pickle=True) # since numpy.savez using pickling
+    meta_vocab_size = meta['vocab_size'].item()
     print(f"found vocab_size = {meta_vocab_size} (inside {meta_path})")
 
 # model init

@@ -1,5 +1,4 @@
 import os
-import pickle
 import numpy as np
 from tensorflow.keras.preprocessing.text import Tokenizer
 
@@ -45,11 +44,11 @@ np.array(
     dtype=np.uint16
 ).tofile(os.path.join(os.path.dirname(__file__), 'test.bin'))
 
-# save the meta information as well, to help us encode/decode later
+# metadata for future encoding or decoding
+# TODO: this is clunky, remove this later
 meta = {
     'vocab_size': vocab_size,
     'itos': itos,
     'stoi': stoi,
 }
-with open(os.path.join(os.path.dirname(__file__), 'meta.pkl'), 'wb') as f:
-    pickle.dump(meta, f)
+np.savez(os.path.join(os.path.dirname(__file__), 'meta.npz'), **meta)

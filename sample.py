@@ -2,7 +2,7 @@
 Sample from a trained model
 """
 import os
-import pickle
+import numpy as np
 from contextlib import nullcontext
 import torch
 import tiktoken
@@ -54,15 +54,14 @@ model.to(device)
 if compile:
     model = torch.compile(model) # requires PyTorch 2.0 (optional)
 
-# look for the meta pickle in case it is available in the dataset folder
+# look for the meta npz in case it is available in the dataset folder
 load_meta = False
 if init_from == 'resume' and 'config' in checkpoint and 'dataset' in checkpoint['config']: # older checkpoints might not have these...
-    meta_path = os.path.join('data', checkpoint['config']['dataset'], 'meta.pkl')
+    meta_path = os.path.join('data', checkpoint['config']['dataset'], 'meta.npz')
     load_meta = os.path.exists(meta_path)
 if load_meta:
     print(f"Loading meta from {meta_path}...")
-    with open(meta_path, 'rb') as f:
-        meta = pickle.load(f)
+    meta = np.load(meta_path, allow_pickle=True)
 
     # load dataset
     dataset_path = os.path.join(os.path.dirname(__file__), 'data/ipsum/input.txt')
