@@ -3,15 +3,18 @@ import argparse
 import time
 import math
 from contextlib import nullcontext
+import sys
 
 import numpy as np
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
+from torch.utils.data import Dataset, DataLoader
 
 from models.model import GPTConfig, GPT
 
 out_dir = 'out'
+override_dir = False # allow replacement of current out_dir file
 eval_interval = 250 # keep frequent because we'll overfit
 eval_iters = 200
 log_interval = 10 # just for printing to console
@@ -65,54 +68,112 @@ args = parser.parse_args()
 if args.out_dir is not None:
     out_dir = args.out_dir
 
-# various inits, derived attributes, I/O setup
-ddp = int(os.environ.get('RANK', -1)) != -1 # is this a ddp run?
-if ddp:
+def init_ddp_environment():
+    # initalize DDP environment
     init_process_group(backend=backend)
-    ddp_rank = int(os.environ['RANK'])
-    ddp_local_rank = int(os.environ['LOCAL_RANK'])
-    ddp_world_size = int(os.environ['WORLD_SIZE'])
+    try:
+        # rank: unique identifier assigned to each process in 
+        # distributed setup. N processes -> 0 to N-1 unique ranks
+        ddp_rank = int(os.environ['RANK'])
+        # local rank: similar to rank, but for multiple processes
+        # running on a single "local" GPU
+        ddp_local_rank = int(os.environ['LOCAL_RANK'])
+        # world size: total number of processes across whole DDP setup
+        ddp_world_size = int(os.environ['WORLD_SIZE'])
+    except KeyError as e:
+        raise RuntimeError(f"Environment variable {e.args[0]} not set")
+
+    # set device to GPU corresponding to local rank
     device = f'cuda:{ddp_local_rank}'
     torch.cuda.set_device(device)
-    master_process = ddp_rank == 0 # this process will do logging, checkpointing etc.
-    seed_offset = ddp_rank # each process gets a different seed
+    return ddp_rank, ddp_local_rank, ddp_world_size, device
+
+# check if DDP is enabled
+try:
+    ddp = int(os.environ.get('RANK', -1)) != -1
+except KeyError as e:
+    raise RuntimeError(f"Environment variable {e.args[0]} not set")
+
+if ddp:
+    ddp_rank, ddp_local_rank, ddp_world_size, device = init_ddp_environment()
+
+    # generate unique random seed for each process
+    master_process = ddp_rank == 0
+    seed_offset = ddp_rank
     assert gradient_accumulation_steps % torch.cuda.device_count() == 0
     gradient_accumulation_steps //= torch.cuda.device_count()
 else:
-    # if not ddp, we are running on a single gpu, and one process
+    # single GPU setup; only one process
+    # rank is always 0 and no seed offset
     master_process = True
     seed_offset = 0
     ddp_world_size = 1
+
+# Calculate tokens per iteration
 tokens_per_iter = gradient_accumulation_steps * ddp_world_size * batch_size * block_size
-print(f"tokens per iteration will be: {tokens_per_iter:,}")
+print(f"Tokens per training iteration: {tokens_per_iter:,}")
 
 if master_process:
-    os.makedirs(out_dir, exist_ok=True)
+    if override_dir or not os.path.exists(out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+    else:
+        print(f'The directory {out_dir} does not exist.' if override_dir else f'Cannot override {out_dir}. Set override_dir=True.')
+        sys.exit(1)
 if not torch.cuda.is_available():
     print("WARNING: CUDA not available with torch, using CPU instead")
-torch.manual_seed(1337 + seed_offset)
-torch.backends.cuda.matmul.allow_tf32 = True # allow tf32 on matmul
-torch.backends.cudnn.allow_tf32 = True # allow tf32 on cudnn
+torch.manual_seed(1337 + seed_offset) # for reproducible results
+# enable TensorFloat-32 (TF32) for matrix multiplication and cuDNN operations
+# TF32: data type introduced by NVIDIA in their Ampere architecture GPUs to
+# speed up computations while maintaining enough precision for deep learning.
+# try FP16 or FP32 if not using an Ampere GPU
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.autocast
 # note: float16 data type will automatically use a GradScaler
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
+# enable automatic mixed precision if GPU is being used
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-# poor man's data loader
+# uses DataLoader from torch for automatic batching, shuffling, and multi-threaded loading
+class TextDataset(Dataset):
+    def __init__(self, data, block_size):
+        self.data = data
+        self.block_size = block_size
+
+    def __len__(self):
+        return len(self.data) - self.block_size
+
+    def __getitem__(self, idx):
+        x = torch.from_numpy(self.data[idx:idx+self.block_size].astype(np.int64))
+        y = torch.from_numpy(self.data[idx+1:idx+1+self.block_size].astype(np.int64))
+        return x, y
+
+# load data
 data_dir = os.path.join('data', dataset)
-train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint16, mode='r')
-test_data = np.memmap(os.path.join(data_dir, 'test.bin'), dtype=np.uint16, mode='r')
-def get_batch(split):
-    data = train_data if split == 'train' else test_data
-    ix = torch.randint(len(data) - block_size, (batch_size,))
-    x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
-    y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
-    if device_type == 'cuda':
-        # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
-        x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
-    else:
-        x, y = x.to(device), y.to(device)
-    return x, y
+train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint8, mode='r')
+test_data = np.memmap(os.path.join(data_dir, 'test.bin'), dtype=np.uint8, mode='r')
+
+# create datasets and data loaders
+# iterate over a data loader to get a batch of data
+train_dataset = TextDataset(train_data, block_size)
+test_dataset = TextDataset(test_data, block_size)
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
+
+# # create batches of data for training or testing
+# def get_batch(split):
+#     data = train_data if split == 'train' else test_data
+#     # create tensor of random integers representing starting indicies of sequences in batch
+#     # there are batch_size sequences of length block_size
+#     ix = torch.randint(len(data) - block_size, (batch_size,))
+#     x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
+#     y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
+#     if device_type == 'cuda':
+#         # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
+#         x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
+#     else:
+#         x, y = x.to(device), y.to(device)
+#     return x, y
 
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
@@ -199,16 +260,19 @@ if ddp:
 def estimate_loss():
     out = {}
     model.eval()
-    for split in ['train', 'test']:
+    for split, loader in [('train', train_loader), ('test', test_loader)]:
         losses = torch.zeros(eval_iters)
-        for k in range(eval_iters):
-            X, Y = get_batch(split)
+        for k, (X, Y) in enumerate(loader):
+            if k >= eval_iters:
+                break
+            X, Y = X.to(device), Y.to(device)
             with ctx:
                 logits, loss = model(X, Y)
             losses[k] = loss.item()
         out[split] = losses.mean()
     model.train()
     return out
+
 
 # learning rate decay scheduler (cosine with warmup)
 def get_lr(it):
@@ -230,10 +294,12 @@ if wandb_log and master_process:
     wandb.init(project=wandb_project, name=wandb_run_name, config=config)
 
 # training loop
-X, Y = get_batch('train') # fetch the very first batch
+train_iter = iter(train_loader)  # create an iterator for the training data loader
+X, Y = next(train_iter)  # fetch the first batch
+X, Y = X.to(device), Y.to(device)  # move the batch data to the correct device
 t0 = time.time()
-local_iter_num = 0 # number of iterations in the lifetime of this process
-raw_model = model.module if ddp else model # unwrap DDP container if needed
+local_iter_num = 0  # number of iterations in the lifetime of this process
+raw_model = model.module if ddp else model  # unwrap DDP container if needed
 running_mfu = -1.0
 while True:
 
@@ -283,7 +349,14 @@ while True:
             logits, loss = model(X, Y)
             loss = loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
         # immediately async prefetch next batch while model is doing the forward pass on the GPU
-        X, Y = get_batch('train')
+        try:
+            X, Y = next(train_iter)
+        except StopIteration:
+            # If StopIteration is raised, reinitialize the data loader
+            train_iter = iter(train_loader)
+            X, Y = next(train_iter)
+        X, Y = X.to(device), Y.to(device)  # move the batch data to the correct device
+
         # backward pass, with gradient scaling if training in fp16
         scaler.scale(loss).backward()
     # clip the gradient

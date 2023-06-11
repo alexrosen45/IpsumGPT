@@ -37,11 +37,11 @@ decode = lambda l: ' '.join([itos[i] for i in l])
 # (or uint32 if you somehow need even more)
 np.array(
     encode(data[:int(len(data) * SPLIT_RATIO)]),
-    dtype=np.uint16
+    dtype=np.uint8
 ).tofile(os.path.join(os.path.dirname(__file__), 'train.bin'))
 np.array(
     encode(data[int(len(data) * SPLIT_RATIO):]),
-    dtype=np.uint16
+    dtype=np.uint8
 ).tofile(os.path.join(os.path.dirname(__file__), 'test.bin'))
 
 # metadata for future encoding or decoding
