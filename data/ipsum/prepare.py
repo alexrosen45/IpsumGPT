@@ -18,11 +18,11 @@ with open(dataset_path, 'r') as f:
 
 # tokenization (filters no characters)
 # for automatic punctuation filtering, remove filters argument
-tokenizer = Tokenizer(char_level=False, filters='')
+tokenizer = Tokenizer(char_level=CHAR_LEVEL, filters='')
 tokenizer.fit_on_texts([data])
 
 vocab_size = len(tokenizer.word_index) + 1  # +1 from reserved 0 index for padding
-print(f'{vocab_size} unique words.')
+print(f'vocab size: {vocab_size}')
 
 # stoi (string to integer) and itos (integer to string) mappings
 stoi = tokenizer.word_index
@@ -33,21 +33,17 @@ encode = lambda s: tokenizer.texts_to_sequences([s])[0]
 # decoder: take a list of integers, output a string
 decode = lambda l: ' '.join([itos[i] for i in l])
 
-# train test splits
-train_data = data[:int(len(data) * SPLIT_RATIO)]
-val_data = data[int(len(data) * SPLIT_RATIO):]
-
-# encode both to integers
-train_ids = encode(train_data)
-val_ids = encode(val_data)
-print(f"train has {len(train_ids):,} tokens")
-print(f"val has {len(val_ids):,} tokens")
-
-# export to bin files
-train_ids = np.array(train_ids, dtype=np.uint16)
-val_ids = np.array(val_ids, dtype=np.uint16)
-train_ids.tofile(os.path.join(os.path.dirname(__file__), 'train.bin'))
-val_ids.tofile(os.path.join(os.path.dirname(__file__), 'val.bin'))
+# train test splits into bin files with encoding
+# if vocab size exceeds 255, increase to uint16
+# (or uint32 if you somehow need even more)
+np.array(
+    encode(data[:int(len(data) * SPLIT_RATIO)]),
+    dtype=np.uint16
+).tofile(os.path.join(os.path.dirname(__file__), 'train.bin'))
+np.array(
+    encode(data[int(len(data) * SPLIT_RATIO):]),
+    dtype=np.uint16
+).tofile(os.path.join(os.path.dirname(__file__), 'test.bin'))
 
 # save the meta information as well, to help us encode/decode later
 meta = {
