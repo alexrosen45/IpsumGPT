@@ -10,6 +10,13 @@ SPLIT_RATIO = 0.8
 # see https://huggingface.co/docs/transformers/tokenizer_summary
 CHAR_LEVEL = False
 
+# parse optional command line arguments
+parser = argparse.ArgumentParser(description="out directory")
+parser.add_argument('--out_dir', type=str, help='Out directory of model (ex. --out_dir="out-ipsum")')
+args = parser.parse_args()
+if args.out_dir is not None:
+    out_dir = args.out_dir
+
 # load dataset
 dataset_path = os.path.join(os.path.dirname(__file__), 'input.txt')
 with open(dataset_path, 'r') as f:

@@ -14,7 +14,7 @@ from torch.utils.data import Dataset, DataLoader
 from models.model import GPTConfig, GPT
 
 out_dir = 'out'
-override_dir = False # allow replacement of current out_dir file
+override_dir = True # allow replacement of current out_dir file
 eval_interval = 250 # keep frequent because we'll overfit
 eval_iters = 200
 log_interval = 10 # just for printing to console
@@ -328,7 +328,7 @@ while True:
             train_iter = iter(train_loader)
             X, Y = next(train_iter)
         X, Y = X.to(device), Y.to(device)  # move the batch data to the correct device
-        
+
         # backward pass, with gradient scaling if training in fp16
         scaler.scale(loss).backward()
     # clip the gradient
