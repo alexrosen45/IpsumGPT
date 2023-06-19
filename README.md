@@ -14,3 +14,5 @@ python3 sample.py --out_dir=out-ipsum --start="Lorem"
 
 Check tensorflow installation:
 python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
+
+python3 data/ipsum/process.py --fetch --fetch_dir="data/ipsum/ipsum-dataset" --process

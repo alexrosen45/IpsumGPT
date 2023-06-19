@@ -6,7 +6,6 @@ import numpy as np
 from contextlib import nullcontext
 import torch
 import argparse
-import tiktoken
 from models.model import GPTConfig, GPT
 from tensorflow.keras.preprocessing.text import Tokenizer
 
@@ -17,6 +16,14 @@ top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 p
 seed = 1337 # for reproducibility
 device = 'cuda' # set to cpu on mac
 dtype = 'bfloat16' # 'float32' or 'bfloat16' or 'float16'
+
+# TODO: implement this later
+# # Get necessary metadata
+# with open(os.path.join(data_dir, 'metadata.json'), 'r') as f:
+#     metadata = json.load(f)
+# vocab_size = metadata['vocab_size']
+# use_uint16 = metadata['uint16'] # for encoding/decoding
+# char_level = metadata['char_level_tokenization'] # for encoding/decoding
 
 # parse optional command line arguments
 parser = argparse.ArgumentParser(description="out directory, start of text")
@@ -55,10 +62,6 @@ model.load_state_dict(state_dict)
 model.eval()
 model.to(device)
 model = torch.compile(model)
-
-meta_path = os.path.join('data', checkpoint['config']['dataset'], 'meta.npz')
-load_meta = os.path.exists(meta_path)
-meta = np.load(meta_path, allow_pickle=True)
 
 # load dataset
 dataset_path = os.path.join(os.path.dirname(__file__), 'data/ipsum/input.txt')

@@ -163,7 +163,8 @@ cython_debug/
 out/*
 out-ipsum/*
 
-# Processed datset
-data/ipsum/meta.npz
+# Processed dataset
+data/ipsum/metadata.json
 data/ipsum/test.bin
 data/ipsum/train.bin
+data/ipsum/input.txt

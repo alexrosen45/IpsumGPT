@@ -4,7 +4,7 @@ import time
 import math
 from contextlib import nullcontext
 import sys
-
+import json
 import numpy as np
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -147,10 +147,23 @@ class TextDataset(Dataset):
         y = torch.from_numpy(self.data[idx+1:idx+1+self.block_size].astype(np.int64))
         return x, y
 
-# load data
+# Load data
 data_dir = os.path.join('data', dataset)
-train_data = np.memmap(os.path.join(data_dir, 'train.bin'), dtype=np.uint8, mode='r')
-test_data = np.memmap(os.path.join(data_dir, 'test.bin'), dtype=np.uint8, mode='r')
+
+# Get necessary metadata
+with open(os.path.join(data_dir, 'metadata.json'), 'r') as f:
+    metadata = json.load(f)
+vocab_size = metadata['vocab_size']
+use_uint16 = metadata['uint16'] # for encoding/decoding
+
+train_data = np.memmap(os.path.join(data_dir, 'train.bin'),
+    dtype=np.uint16 if use_uint16 else np.uint8,
+    mode='r'
+)
+test_data = np.memmap(os.path.join(data_dir, 'test.bin'),
+    dtype=np.uint16 if use_uint16 else np.uint8,
+    mode='r'
+)
 
 # create datasets and data loaders
 # iterate over a data loader to get a batch of data
@@ -163,17 +176,13 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, pin_
 iter_num = 0
 best_loss = 1e9
 
-# get vocab size from dataset
-meta = np.load(os.path.join(data_dir, 'meta.npz'), allow_pickle=True) # since numpy.savez using pickling
-meta_vocab_size = meta['vocab_size'].item()
-
 # model init
 model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size,
                   bias=bias, vocab_size=None, dropout=dropout) # start with model_args from command line
 if init_from == 'scratch':
     # init a new model from scratch
     print("Initializing a new model from scratch")
-    model_args['vocab_size'] = meta_vocab_size if meta_vocab_size is not None else 50304
+    model_args['vocab_size'] = vocab_size
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
 elif init_from == 'resume':
