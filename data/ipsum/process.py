@@ -8,11 +8,11 @@ from datetime import datetime
 from tensorflow.keras.preprocessing.text import Tokenizer
 
 # Parse optional command line arguments
-parser = argparse.ArgumentParser(description="dataset directory, fetch, no processing option, character level, tt split")
+parser = argparse.ArgumentParser(description="Fetching and/or processing parameters")
 parser.add_argument('--fetch_dir', type=str, help='Dataset directory (ex. --fetch_dir="data/ipsum/lorem-ipsum-dataset")')
 parser.add_argument('--fetch', action='store_true', help='Fetch dataset with --fetch (requires non-empty --fetch_dir arg)')
 parser.add_argument('--process', action='store_true', help='Prepare fetched dataset for training with --process')
-parser.add_argument('--split_ratio', type=float, help='Train test split ratio (ex. --split-ratio=0.8 trains on 80 percent of dataset)')
+parser.add_argument('--split_ratio', type=float, default = 0.8, help='Train test split ratio (ex. --split-ratio=0.8 trains on 80 percent of dataset)')
 parser.add_argument('--char_level', action='store_true', help='Enables character level tokenization rather than word level tokenization')
 parser.add_argument('--np_uint16', action='store_true', help='Forces use of np.int16 for encode/decode. \
                     This is automatic when vocab size exceeds 255 unique characters.')
@@ -20,7 +20,7 @@ args = parser.parse_args()
 directory = args.fetch_dir
 fetch = args.fetch
 process = args.process
-split_ratio = 0.8 if args.split_ratio is None else args.split_ratio
+split_ratio = args.split_ratio # default is 0.8
 # char level constant for Keras tokenizer
 # set to True for character level tokenization,
 # or False for word level tokenization
