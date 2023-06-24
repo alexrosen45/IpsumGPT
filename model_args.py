@@ -1,12 +1,16 @@
 
 # Get only model args from args
-def get_model_args(args, vocab_size=None):
+# args is usually command line arguments or old parameters from checkpoint
+def get_model_args(args, vocab_size=-1):
+    # 0 vocab size corresponds to reading it from args instead of metadata
+    # Read as a dictionary or another data structure with dot notation
+    # TODO: if isinstance(args, dict):
     return {
         'n_layer': args.n_layer,
         'n_head': args.n_head,
         'n_embd': args.n_embd,
         'block_size': args.block_size,
         'bias': args.bias,
-        'vocab_size': vocab_size, # Set using data processing metadata
-        'dropout': args.dropout_rate
+        'vocab_size': args.vocab_size if vocab_size == -1 else vocab_size,
+        'dropout_rate': args.dropout_rate
     }

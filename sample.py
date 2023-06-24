@@ -5,6 +5,7 @@ import os
 import numpy as np
 from contextlib import nullcontext
 import torch
+import model_args
 import argparse
 from models.model import GPTConfig, GPT
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -13,7 +14,7 @@ num_samples = 1
 max_new_tokens = 20 # max tokens per sample (~tokens per sample)
 temperature = 1.0 # see https://medium.com/@imisri1/how-to-set-sampling-temperature-for-gpt-models-762887df1fac
 top_k = 200 # retain only the top_k most likely tokens, clamp others to have 0 probability
-seed = 1337 # for reproducibility
+seed = 1337 # for reproducibilitymodel_args
 device = 'cuda' # set to cpu on mac
 dtype = 'bfloat16' # 'float32' or 'bfloat16' or 'float16'
 
@@ -45,7 +46,7 @@ ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=
 # model
 ckpt_path = os.path.join(out_dir, 'ckpt.pt')
 checkpoint = torch.load(ckpt_path, map_location=device)
-gptconf = GPTConfig(**checkpoint['model_args'])
+gptconf = GPTConfig(**checkpoint['params'])
 model = GPT(gptconf)
 state_dict = checkpoint['model']
 

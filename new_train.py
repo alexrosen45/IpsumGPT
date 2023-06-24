@@ -10,7 +10,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 from torch.utils.data import Dataset, DataLoader
-from models.model import GPTConfig, GPT
+from model.model import GPTConfig, GPT
 
 
 # Get command line and default arguments and perform checks

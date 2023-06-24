@@ -70,7 +70,10 @@ def arg_checks(args):
     # CUDA availability check
     if not args.cpu and not torch.cuda.is_available():
         raise Exception("CUDA is not available but the program is set to use a GPU. You can run the program on your \
-            CPU instead with --cpu.")  
+            CPU instead with --cpu.")
+    # Embedding dimensionality with attention heads
+    if args.n_embd % args.n_head != 0:
+        raise ValueError("Dimensionality of embeddings (n_embd) needs to be evenly divisible by number of attention heads (n_head).")
 
 # Print argument warnings to console
 def arg_warnings(args):

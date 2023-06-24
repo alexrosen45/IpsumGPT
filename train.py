@@ -11,7 +11,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 from torch.utils.data import Dataset, DataLoader
-from models.model import GPTConfig, GPT
+from model.model import GPTConfig, GPT
 
 
 # Get command line and default arguments and perform checks
@@ -186,6 +186,7 @@ else:
     print(f"Resuming training from {out_dir}")
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
+    print(checkpoint['params'])
     gptconf = GPTConfig(
         **model_args.get_model_args(
             checkpoint['params'],
@@ -290,7 +291,8 @@ while True:
                         'log_interval': log_interval,
                         'create_new_mode': create_new_model,
                         'device': device,
-                        'iter_num': iter_num
+                        'iter_num': iter_num,
+                        'vocab_size': vocab_size
                     },
                 }
                 print(f"saving checkpoint to {out_dir}")
