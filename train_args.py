@@ -16,18 +16,18 @@ def get_args():
         (ex. --gradient_accumulation_steps=1). Increase this value gradually when facing memory issues.')
     parser.add_argument('--block_size', type=int, default=256, help='Max previous tokens of context (ex. --block_size=256)')
     parser.add_argument('--batch_size', type=int, default=64, help='Training examples per iteration (ex. --batch_size=64)')
-    parser.add_argument('--n_layer', type=int, default=8, help='Number of transformer layers (ex. --n_layer=8)')
-    parser.add_argument('--n_head', type=int, default=8, help='Number of attention heads per self-attention mechanism (ex. --n_head=8)')
-    parser.add_argument('--n_embd', type=int, default=400, help='Dimensionality of input and output of each transformer\
+    parser.add_argument('--n_layer', type=int, default=6, help='Number of transformer layers (ex. --n_layer=8)')
+    parser.add_argument('--n_head', type=int, default=6, help='Number of attention heads per self-attention mechanism (ex. --n_head=8)')
+    parser.add_argument('--n_embd', type=int, default=384, help='Dimensionality of input and output of each transformer\
         layer (ex. --n_embd=400). Increasing dimensionality can improve recognition of complex patterns.')
     parser.add_argument('--dropout_rate', type=float, default=0.2, help='Dropout rate for regularization (ex. --dropout_rate=0.25)')
     parser.add_argument('--bias', action='store_true', help='Use bias in transformer layers and layer normalization.')
     parser.add_argument('--learning_rate', type=float, default=1e-3, help='Learning rate (ex. --learning_rate=1e-6)')
-    parser.add_argument('--max_iters', type=int, default=5500, help='Training iterations (ex. --max_iters=5500)')
-    parser.add_argument('--weight_decay', type=float, default=1e-2, help='Weight decay for L2 regularization (ex. --weight_decay=1e-2). \
+    parser.add_argument('--max_iters', type=int, default=5000, help='Training iterations (ex. --max_iters=5500)')
+    parser.add_argument('--weight_decay', type=float, default=1e-1, help='Weight decay for L2 regularization (ex. --weight_decay=1e-2). \
         Set to 0 for no regularization.')
     parser.add_argument('--beta1', type=float, default=0.9, help='AdamW optimizer beta_1 hyperparameter (ex. --beta1=0.9)')
-    parser.add_argument('--beta2', type=float, default=0.999, help='AdamW optimizer beta_2 hyperparameter (ex. --beta2=0.999)')
+    parser.add_argument('--beta2', type=float, default=0.99, help='AdamW optimizer beta_2 hyperparameter (ex. --beta2=0.999)')
     parser.add_argument('--cpu', action='store_true', help='Use CPU instead of GPU with CUDA.')
     return parser.parse_args()
 

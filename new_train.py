@@ -4,7 +4,6 @@ import math
 from contextlib import nullcontext
 import sys
 import train_args
-import model_args
 import json
 import numpy as np
 import torch
@@ -172,26 +171,26 @@ train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pi
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
 
 # Initialize model and move to GPU
+model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size,
+    bias=bias, vocab_size=None, dropout=dropout)
 if create_new_model:
+    # init a new model from scratch
     print("Initializing a new model from scratch")
-    gptconf = GPTConfig(
-        **model_args.get_model_args(
-            args=args,
-            vocab_size=vocab_size # from data processing metadata
-        )
-    )
+    model_args['vocab_size'] = vocab_size
+    gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
-# Resume training from previous checkpoint
 else:
     print(f"Resuming training from {out_dir}")
+    # resume training from a checkpoint.
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
-    gptconf = GPTConfig(
-        **model_args.get_model_args(
-            checkpoint['params'],
-            vocab_size=checkpoint['params']['vocab_size'] # fix vocab size according to last checkpoint
-        )
-    )
+    checkpoint_model_args = checkpoint['model_args']
+    # force these config attributes to be equal otherwise we can't even resume training
+    # the rest of the attributes (e.g. dropout) can stay as desired from command line
+    for k in ['n_layer', 'n_head', 'n_embd', 'block_size', 'bias', 'vocab_size']:
+        model_args[k] = checkpoint_model_args[k]
+    # create the model
+    gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
     state_dict = checkpoint['model']
     # fix the keys of the state dictionary :(
@@ -205,9 +204,6 @@ else:
     for param in checkpoint['params']:
         globals[param] = checkpoint['params']['param']
 model.to(device)
-
-# initialize a GradScaler. If enabled=False scaler is a no-op
-scaler = torch.cuda.amp.GradScaler(enabled=False)
 
 # optimizer
 optimizer = model.configure_optimizers(weight_decay, learning_rate, (beta1, beta2), device_type)
@@ -317,14 +313,8 @@ while True:
             train_iter = iter(train_loader)
             X, Y = next(train_iter)
         X, Y = X.to(device), Y.to(device)  # move the batch data to the correct device
-        # backward pass, with gradient scaling if training in fp16
-        scaler.scale(loss).backward()
-    # clip the gradient
-    scaler.unscale_(optimizer)
+    # Gradient clipping
     torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-    # step the optimizer and scaler if training in fp16
-    scaler.step(optimizer)
-    scaler.update()
 
     # flush the gradients as soon as we can, no need for this memory anymore
     optimizer.zero_grad(set_to_none=True)

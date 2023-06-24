@@ -1,16 +1,16 @@
 import os
+import argparse
 import time
 import math
 from contextlib import nullcontext
 import sys
-import train_args
-import model_args
 import json
 import numpy as np
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 from torch.utils.data import Dataset, DataLoader
+import train_args
 from models.model import GPTConfig, GPT
 
 
@@ -70,49 +70,47 @@ create_new_model = not args.resume # default is True (don't resume)
 device = 'cpu' if args.cpu else 'cuda'
 iter_num = 0 # Number of training iterations that have passed
 
-
 # Create out directory if it does not exist
 if not os.path.exists(out_dir):
     os.makedirs(out_dir)
 
 def init_ddp_environment():
-    # Initalize DDP environment
-    # See https://developer.nvidia.com/nccl
+    # initalize DDP environment
     init_process_group(backend='nccl')
     try:
-        # Rank: unique identifier assigned to each process in 
-        # Distributed setup: N processes -> 0 to N-1 unique ranks
+        # rank: unique identifier assigned to each process in 
+        # distributed setup. N processes -> 0 to N-1 unique ranks
         ddp_rank = int(os.environ['RANK'])
-        # Local rank: similar to rank, but for multiple processes
-        # Running on a single (local) GPU
+        # local rank: similar to rank, but for multiple processes
+        # running on a single "local" GPU
         ddp_local_rank = int(os.environ['LOCAL_RANK'])
-        # World size: total number of processes across whole DDP setup
+        # world size: total number of processes across whole DDP setup
         ddp_world_size = int(os.environ['WORLD_SIZE'])
     except KeyError as e:
-        raise RuntimeError(f"Environment variable {e.args[0]} not set.")
+        raise RuntimeError(f"Environment variable {e.args[0]} not set")
 
-    # Set device to GPU corresponding to local rank
+    # set device to GPU corresponding to local rank
     device = f'cuda:{ddp_local_rank}'
     torch.cuda.set_device(device)
     return ddp_rank, ddp_local_rank, ddp_world_size, device
 
-# Check if DDP is enabled
+# check if DDP is enabled
 try:
     ddp = int(os.environ.get('RANK', -1)) != -1
 except KeyError as e:
-    raise RuntimeError(f"Environment variable {e.args[0]} not set.")
+    raise RuntimeError(f"Environment variable {e.args[0]} not set")
 
 if ddp:
     ddp_rank, ddp_local_rank, ddp_world_size, device = init_ddp_environment()
 
-    # Generate unique random seed for each process
+    # generate unique random seed for each process
     master_process = ddp_rank == 0
     seed_offset = ddp_rank
     assert gradient_accumulation_steps % torch.cuda.device_count() == 0
     gradient_accumulation_steps //= torch.cuda.device_count()
 else:
-    # Single GPU setup; only one process
-    # Rank is always 0 and no seed offset
+    # single GPU setup; only one process
+    # rank is always 0 and no seed offset
     master_process = True
     seed_offset = 0
     ddp_world_size = 1
@@ -135,7 +133,7 @@ ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torc
 # Enable automatic mixed precision if GPU is being used
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-# Uses DataLoader from torch for automatic batching, shuffling, and multi-threaded loading
+# uses DataLoader from torch for automatic batching, shuffling, and multi-threaded loading
 class TextDataset(Dataset):
     def __init__(self, data, block_size):
         self.data = data
@@ -164,34 +162,34 @@ test_data = np.memmap(os.path.join(data_dir, 'test.bin'),
     mode='r'
 )
 
-# Create datasets and data loaders
-# Iterate over a data loader to get a batch of data
+# create datasets and data loaders
+# iterate over a data loader to get a batch of data
 train_dataset = TextDataset(train_data, block_size)
 test_dataset = TextDataset(test_data, block_size)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, pin_memory=True)
 
-# Initialize model and move to GPU
+# model init
+model_args = dict(n_layer=n_layer, n_head=n_head, n_embd=n_embd, block_size=block_size,
+                  bias=bias, vocab_size=None, dropout=dropout) # start with model_args from command line
 if create_new_model:
+    # init a new model from scratch
     print("Initializing a new model from scratch")
-    gptconf = GPTConfig(
-        **model_args.get_model_args(
-            args=args,
-            vocab_size=vocab_size # from data processing metadata
-        )
-    )
+    model_args['vocab_size'] = vocab_size
+    gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
-# Resume training from previous checkpoint
 else:
     print(f"Resuming training from {out_dir}")
+    # resume training from a checkpoint.
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
-    gptconf = GPTConfig(
-        **model_args.get_model_args(
-            checkpoint['params'],
-            vocab_size=checkpoint['params']['vocab_size'] # fix vocab size according to last checkpoint
-        )
-    )
+    checkpoint_model_args = checkpoint['model_args']
+    # force these config attributes to be equal otherwise we can't even resume training
+    # the rest of the attributes (e.g. dropout) can stay as desired from command line
+    for k in ['n_layer', 'n_head', 'n_embd', 'block_size', 'bias', 'vocab_size']:
+        model_args[k] = checkpoint_model_args[k]
+    # create the model
+    gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
     state_dict = checkpoint['model']
     # fix the keys of the state dictionary :(
@@ -201,24 +199,23 @@ else:
         if k.startswith(unwanted_prefix):
             state_dict[k[len(unwanted_prefix):]] = state_dict.pop(k)
     model.load_state_dict(state_dict)
-    # Load old global variables
-    for param in checkpoint['params']:
-        globals[param] = checkpoint['params']['param']
-model.to(device)
+    iter_num = checkpoint['iter_num']
+    min_loss = checkpoint['min_loss']
 
-# initialize a GradScaler. If enabled=False scaler is a no-op
-scaler = torch.cuda.amp.GradScaler(enabled=False)
+# crop down the model block size if desired, using model surgery
+if block_size < model.config.block_size:
+    model.crop_block_size(block_size)
+    model_args['block_size'] = block_size # so that the checkpoint will have the right value
+model.to(device)
 
 # optimizer
 optimizer = model.configure_optimizers(weight_decay, learning_rate, (beta1, beta2), device_type)
-if not create_new_model: # If resuming from a previous checkpoint
-    optimizer.load_state_dict(checkpoint['optimizer'])
 checkpoint = None # free up memory
 
-# Compile model
-print("Compiling model...")
+# compile model
+print("compiling the model... (takes a ~minute)")
 unoptimized_model = model
-model = torch.compile(model)
+model = torch.compile(model) # requires PyTorch 2.0
 
 # wrap model into DDP container
 if ddp:
@@ -251,6 +248,8 @@ local_iter_num = 0  # number of iterations in the lifetime of this process
 raw_model = model.module if ddp else model  # unwrap DDP container if needed
 running_mfu = -1.0
 while True:
+
+    # determine and set the learning rate for this iteration
     for param_group in optimizer.param_groups:
         param_group['lr'] = learning_rate
 
@@ -264,34 +263,9 @@ while True:
                 checkpoint = {
                     'model': raw_model.state_dict(),
                     'optimizer': optimizer.state_dict(),
-                    # Save model parameters for resuming training
-                    'params': {
-                        'out_dir': out_dir,
-                        'override_dir': override_dir,
-                        'data_dir': data_dir,
-                        'eval_interval': eval_interval,
-                        'eval_iters': eval_iters,
-                        'eval_only': eval_only,
-                        'gradient_accumulation_steps': gradient_accumulation_steps,
-                        'batch_size': batch_size,
-                        'block_size': block_size,
-                        'force_save_checkpoint': force_save_checkpoint,
-                        'min_loss': min_loss,
-                        'n_layer': n_layer,
-                        'n_head': n_head,
-                        'n_embd': n_embd,
-                        'dropout': dropout,
-                        'bias': bias,
-                        'learning_rate': learning_rate,
-                        'max_iters': max_iters,
-                        'weight_decay': weight_decay,
-                        'beta1': beta1,
-                        'beta2': beta2,
-                        'log_interval': log_interval,
-                        'create_new_mode': create_new_model,
-                        'device': device,
-                        'iter_num': iter_num
-                    },
+                    'model_args': model_args,
+                    'iter_num': iter_num,
+                    'best_val_loss': min_loss,
                 }
                 print(f"saving checkpoint to {out_dir}")
                 torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
@@ -299,6 +273,7 @@ while True:
         break
 
     # forward backward update, with optional gradient accumulation to simulate larger batch size
+    # and using the GradScaler if data type is float16
     for micro_step in range(gradient_accumulation_steps):
         if ddp:
             # in DDP training we only need to sync gradients at the last micro step.
@@ -317,15 +292,6 @@ while True:
             train_iter = iter(train_loader)
             X, Y = next(train_iter)
         X, Y = X.to(device), Y.to(device)  # move the batch data to the correct device
-        # backward pass, with gradient scaling if training in fp16
-        scaler.scale(loss).backward()
-    # clip the gradient
-    scaler.unscale_(optimizer)
-    torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
-    # step the optimizer and scaler if training in fp16
-    scaler.step(optimizer)
-    scaler.update()
-
     # flush the gradients as soon as we can, no need for this memory anymore
     optimizer.zero_grad(set_to_none=True)
 
