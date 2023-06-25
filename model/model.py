@@ -89,29 +89,34 @@ class Block(nn.Module):
         ffn_output = self.dropout(ffn_output)
         return x + ffn_output
 
-@dataclass
-class GPTConfig:
-    block_size: int = 1024
-    vocab_size: int = 50304 # GPT-2 vocab_size of 50257, padded up to nearest multiple of 64 for efficiency
-    n_layer: int = 12
-    n_head: int = 12
-    n_embd: int = 768
-    dropout_rate: float = 0.0
-    bias: bool = True # True: bias in Linears and LayerNorms, like GPT-2. False: a bit better and faster
-
 class GPT(nn.Module):
-    def __init__(self, config):
+    def __init__(self, block_size, vocab_size, n_layer, n_head, n_embd, dropout_rate):
         super().__init__()
-        self.config = config
+        # self.block_size = block_size
+        # # Embedding layers
+        # self.token_embedding = nn.Embedding(vocab_size, n_embd)
+        # self.position_embedding = nn.Embedding(block_size, n_embd)
+        # # Dropout layer
+        # self.dropout_layer = nn.Dropout(dropout_rate)
+        # # Transformer blocks
+        # self.transformer_blocks = nn.ModuleList([Block(n_head, n_embd, dropout_rate) for _ in range(n_layer)])
+        # # LayerNorm layer
+        # self.final_layer_norm = nn.LayerNorm(n_embd)
+        # # Linear layer
+        # self.language_model_head = nn.Linear(n_embd, vocab_size)
+        # # Weight tying between language model head and token embedding
+        # self.token_embedding.weight = self.language_model_head.weight 
+        # # Initialization of weights
+        # self._initialize_weights()
 
         self.transformer = nn.ModuleDict(dict(
-            wte = nn.Embedding(config.vocab_size, config.n_embd),
-            wpe = nn.Embedding(config.block_size, config.n_embd),
-            drop = nn.Dropout(config.dropout_rate),
-            h = nn.ModuleList([Block(config.n_head, config.n_embd, config.dropout_rate) for _ in range(config.n_layer)]),
-            ln_f = nn.LayerNorm(config.n_embd),
+            wte = nn.Embedding(vocab_size, n_embd),
+            wpe = nn.Embedding(block_size, n_embd),
+            drop = nn.Dropout(dropout_rate),
+            h = nn.ModuleList([Block(n_head, n_embd, dropout_rate) for _ in range(n_layer)]),
+            ln_f = nn.LayerNorm(n_embd),
         ))
-        self.lm_head = nn.Linear(config.n_embd, config.vocab_size, bias=False)
+        self.lm_head = nn.Linear(n_embd, vocab_size)
         # with weight tying when using torch.compile() some warnings get generated:
         # "UserWarning: functional_call was passed multiple values for tied weights.
         # This behavior is deprecated and will be an error in future versions"
@@ -123,7 +128,7 @@ class GPT(nn.Module):
         # apply special scaled init to the residual projections, per GPT-2 paper
         for pn, p in self.named_parameters():
             if pn.endswith('c_proj.weight'):
-                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * config.n_layer))
+                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * n_layer))
 
         # report number of parameters
         print("number of parameters: %.2fM" % (self.get_num_params()/1e6,))
@@ -143,16 +148,13 @@ class GPT(nn.Module):
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
-            if module.bias is not None:
-                torch.nn.init.zeros_(module.bias)
+            torch.nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
     def forward(self, idx, targets=None):
         device = idx.device
-        b, t = idx.size()
-        assert t <= self.config.block_size, f"Cannot forward sequence of length {t}, block size is only {self.config.block_size}"
-        pos = torch.arange(0, t, dtype=torch.long, device=device).unsqueeze(0) # shape (1, t)
+        pos = torch.arange(0, idx.size()[1], dtype=torch.long, device=device).unsqueeze(0) # shape (1, idx.size()[1])
 
         # forward the GPT model itself
         tok_emb = self.transformer.wte(idx) # token embeddings of shape (b, t, n_embd)
@@ -172,17 +174,6 @@ class GPT(nn.Module):
             loss = None
 
         return logits, loss
-
-    def crop_block_size(self, block_size):
-        # model surgery to decrease the block size if necessary
-        # e.g. we may load the GPT2 pretrained model checkpoint (block size 1024)
-        # but want to use a smaller block size for some smaller, simpler model
-        assert block_size <= self.config.block_size
-        self.config.block_size = block_size
-        self.transformer.wpe.weight = nn.Parameter(self.transformer.wpe.weight[:block_size])
-        for block in self.transformer.h:
-            if hasattr(block.attn, 'bias'):
-                block.attn.bias = block.attn.bias[:,:,:block_size,:block_size]
 
     def configure_optimizers(self, weight_decay, learning_rate, betas, device_type):
         # start with all of the candidate parameters
@@ -219,7 +210,7 @@ class GPT(nn.Module):
         """
         for _ in range(max_new_tokens):
             # if the sequence context is growing too long we must crop it at block_size
-            idx_cond = idx if idx.size(1) <= self.config.block_size else idx[:, -self.config.block_size:]
+            idx_cond = idx if idx.size(1) <= self.block_size else idx[:, -self.block_size:]
             # forward the model to get the logits for the index in the sequence
             logits, _ = self(idx_cond)
             # pluck the logits at the final step and scale by desired temperature

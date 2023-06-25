@@ -6,11 +6,10 @@ def get_model_args(args, vocab_size=-1):
     # Read as a dictionary or another data structure with dot notation
     # TODO: if isinstance(args, dict):
     return {
+        'block_size': args.block_size,
+        'vocab_size': args.vocab_size if vocab_size == -1 else vocab_size,
         'n_layer': args.n_layer,
         'n_head': args.n_head,
         'n_embd': args.n_embd,
-        'block_size': args.block_size,
-        'bias': args.bias,
-        'vocab_size': args.vocab_size if vocab_size == -1 else vocab_size,
         'dropout_rate': args.dropout_rate
     }

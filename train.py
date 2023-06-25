@@ -11,7 +11,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 from torch.utils.data import Dataset, DataLoader
-from model.model import GPTConfig, GPT
+from model.model import GPT
 
 
 # Get command line and default arguments and perform checks
@@ -52,9 +52,6 @@ n_head = args.n_head
 n_embd = args.n_embd
 # Dropout rate (for regularization)
 dropout = args.dropout_rate
-# Use bias terms in linear transformations inside transfomer
-# layers and layer normalization.
-bias = args.bias
 
 # AdamW optimizer parameters
 # See https://paperswithcode.com/method/adamw
@@ -174,26 +171,23 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=True, pin_
 # Initialize model and move to GPU
 if create_new_model:
     print("Initializing a new model from scratch")
-    gptconf = GPTConfig(
+    model = GPT(
         **model_args.get_model_args(
             args=args,
             vocab_size=vocab_size # from data processing metadata
         )
     )
-    model = GPT(gptconf)
 # Resume training from previous checkpoint
 else:
     print(f"Resuming training from {out_dir}")
     ckpt_path = os.path.join(out_dir, 'ckpt.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
-    print(checkpoint['params'])
-    gptconf = GPTConfig(
+    model = GPT(
         **model_args.get_model_args(
             checkpoint['params'],
             vocab_size=checkpoint['params']['vocab_size'] # fix vocab size according to last checkpoint
         )
     )
-    model = GPT(gptconf)
     state_dict = checkpoint['model']
     # fix the keys of the state dictionary :(
     # honestly no idea how checkpoints sometimes get this prefix, have to debug more
@@ -281,7 +275,6 @@ while True:
                         'n_head': n_head,
                         'n_embd': n_embd,
                         'dropout': dropout,
-                        'bias': bias,
                         'learning_rate': learning_rate,
                         'max_iters': max_iters,
                         'weight_decay': weight_decay,
