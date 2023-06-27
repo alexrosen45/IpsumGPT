@@ -3,8 +3,7 @@ import time
 import math
 from contextlib import nullcontext
 import sys
-import train_args
-import model_args
+from arguments import train_args, model_args
 import json
 import numpy as np
 import torch
@@ -12,7 +11,11 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.distributed import init_process_group, destroy_process_group
 from torch.utils.data import Dataset, DataLoader
 from model.model import GPT
+from datetime import datetime
 
+# Create models folder if it does not exist
+if not os.path.exists('models'):
+    os.makedirs('models')
 
 # Get command line and default arguments and perform checks
 args = train_args.get_args()
@@ -51,7 +54,7 @@ n_head = args.n_head
 # Higher dimensionality can increase ability to recognize more complex patterns
 n_embd = args.n_embd
 # Dropout rate (for regularization)
-dropout = args.dropout_rate
+dropout_rate = args.dropout_rate
 
 # AdamW optimizer parameters
 # See https://paperswithcode.com/method/adamw
@@ -67,10 +70,9 @@ create_new_model = not args.resume # default is True (don't resume)
 device = 'cpu' if args.cpu else 'cuda'
 iter_num = 0 # Number of training iterations that have passed
 
-
 # Create out directory if it does not exist
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
+if not os.path.exists('models/' + out_dir):
+    os.makedirs('models/' + out_dir)
 
 def init_ddp_environment():
     # Initalize DDP environment
@@ -151,6 +153,7 @@ with open(os.path.join(data_dir, 'metadata.json'), 'r') as f:
     metadata = json.load(f)
 vocab_size = metadata['vocab_size']
 use_uint16 = metadata['uint16'] # for encoding/decoding
+data_dir = metadata['data_dir']
 
 train_data = np.memmap(os.path.join(data_dir, 'train.bin'),
     dtype=np.uint16 if use_uint16 else np.uint8,
@@ -179,8 +182,8 @@ if create_new_model:
     )
 # Resume training from previous checkpoint
 else:
-    print(f"Resuming training from {out_dir}")
-    ckpt_path = os.path.join(out_dir, 'ckpt.pt')
+    print(f"Resuming training from {'models/' + out_dir}")
+    ckpt_path = os.path.join('models/' + out_dir, 'ckpt.pt')
     checkpoint = torch.load(ckpt_path, map_location=device)
     model = GPT(
         **model_args.get_model_args(
@@ -198,7 +201,7 @@ else:
     model.load_state_dict(state_dict)
     # Load old global variables
     for param in checkpoint['params']:
-        globals[param] = checkpoint['params']['param']
+        globals()[param] = checkpoint['params'][param]
 model.to(device)
 
 # initialize a GradScaler. If enabled=False scaler is a no-op
@@ -244,7 +247,7 @@ X, Y = X.to(device), Y.to(device)  # move the batch data to the correct device
 t0 = time.time()
 raw_model = model.module if ddp else model  # unwrap DDP container if needed
 running_mfu = -1.0
-while True:
+while iter_num <= max_iters:
     for param_group in optimizer.param_groups:
         param_group['lr'] = learning_rate
 
@@ -274,7 +277,7 @@ while True:
                         'n_layer': n_layer,
                         'n_head': n_head,
                         'n_embd': n_embd,
-                        'dropout': dropout,
+                        'dropout_rate': dropout_rate,
                         'learning_rate': learning_rate,
                         'max_iters': max_iters,
                         'weight_decay': weight_decay,
@@ -287,8 +290,8 @@ while True:
                         'vocab_size': vocab_size
                     },
                 }
-                print(f"saving checkpoint to {out_dir}")
-                torch.save(checkpoint, os.path.join(out_dir, 'ckpt.pt'))
+                print(f"saving checkpoint to {'models/' + out_dir}")
+                torch.save(checkpoint, os.path.join('models/' + out_dir, 'ckpt.pt'))
     if iter_num == 0 and eval_only:
         break
 
@@ -334,9 +337,17 @@ while True:
         print(f"iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms")
     iter_num += 1
 
-    # termination conditions
-    if iter_num > max_iters:
-        break
+# Save training metadata
+training_metadata = {
+    'vocab_size': vocab_size,
+    'data_dir': data_dir,
+    'generation_date': datetime.now().isoformat(),
+    'uint16': use_uint16, # uint8 otherwise
+}
+
+# Save process metadata to a JSON file
+with open(os.path.join(os.path.dirname(__file__), 'models/' + out_dir + '/metadata.json'), 'w') as file:
+    json.dump(training_metadata, file)
 
 if ddp:
     destroy_process_group()

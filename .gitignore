@@ -160,11 +160,7 @@ cython_debug/
 #.idea/
 
 # Models
-out/*
-out-ipsum/*
+models/
 
 # Processed dataset
-data/ipsum/metadata.json
-data/ipsum/test.bin
-data/ipsum/train.bin
-data/ipsum/input.txt
+datasets/

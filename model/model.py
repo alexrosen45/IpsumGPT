@@ -92,7 +92,7 @@ class Block(nn.Module):
 class GPT(nn.Module):
     def __init__(self, block_size, vocab_size, n_layer, n_head, n_embd, dropout_rate):
         super().__init__()
-        # self.block_size = block_size
+        self.block_size = block_size
         # # Embedding layers
         # self.token_embedding = nn.Embedding(vocab_size, n_embd)
         # self.position_embedding = nn.Embedding(block_size, n_embd)
@@ -130,27 +130,17 @@ class GPT(nn.Module):
             if pn.endswith('c_proj.weight'):
                 torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * n_layer))
 
-        # report number of parameters
-        print("number of parameters: %.2fM" % (self.get_num_params()/1e6,))
-
-    def get_num_params(self, non_embedding=True):
-        """
-        Return the number of parameters in the model.
-        For non-embedding count (default), the position embeddings get subtracted.
-        The token embeddings would too, except due to the parameter sharing these
-        params are actually used as weights in the final layer, so we include them.
-        """
-        n_params = sum(p.numel() for p in self.parameters())
-        if non_embedding:
-            n_params -= self.transformer.wpe.weight.numel()
-        return n_params
-
     def _init_weights(self, module):
+        """Initialize weights with Glorot initialization, which
+        has performed well with the swish activation function (smooth and non-monotonic).
+        See https://paperswithcode.com/method/xavier-initialization
+        """
         if isinstance(module, nn.Linear):
-            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
-            torch.nn.init.zeros_(module.bias)
+            torch.nn.init.xavier_uniform_(module.weight)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
-            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            torch.nn.init.xavier_uniform_(module.weight)
 
     def forward(self, idx, targets=None):
         device = idx.device
