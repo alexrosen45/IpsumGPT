@@ -1,4 +1,5 @@
-# TeXGPT
+# IpsumGPT
+A modular implementation of a causal transformer with scaled dot-product attention, layer normalization, and residual connections.
 
 Fetching dataset
 python3 data/ipsum/fetch.py
