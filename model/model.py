@@ -1,8 +1,3 @@
-"""
-https://github.com/openai/gpt-2/blob/master/src/model.py
-https://github.com/huggingface/transformers/blob/main/src/transformers/models/gpt2/modeling_gpt2.py
-"""
-
 import math
 import inspect
 from dataclasses import dataclass
@@ -93,74 +88,60 @@ class GPT(nn.Module):
     def __init__(self, block_size, vocab_size, n_layer, n_head, n_embd, dropout_rate):
         super().__init__()
         self.block_size = block_size
-        # # Embedding layers
-        # self.token_embedding = nn.Embedding(vocab_size, n_embd)
-        # self.position_embedding = nn.Embedding(block_size, n_embd)
-        # # Dropout layer
-        # self.dropout_layer = nn.Dropout(dropout_rate)
-        # # Transformer blocks
-        # self.transformer_blocks = nn.ModuleList([Block(n_head, n_embd, dropout_rate) for _ in range(n_layer)])
-        # # LayerNorm layer
-        # self.final_layer_norm = nn.LayerNorm(n_embd)
-        # # Linear layer
-        # self.language_model_head = nn.Linear(n_embd, vocab_size)
-        # # Weight tying between language model head and token embedding
-        # self.token_embedding.weight = self.language_model_head.weight 
-        # # Initialization of weights
-        # self._initialize_weights()
+        self.vocab_size = vocab_size
+        self.n_layer = n_layer
+        self.n_head = n_head
+        self.n_embd = n_embd
+        self.dropout_layer = dropout_rate
+        # Embedding layers
+        self.token_embedding = nn.Embedding(vocab_size, n_embd)
+        self.position_embedding = nn.Embedding(block_size, n_embd)
+        # Dropout layer
+        self.dropout_layer = nn.Dropout(dropout_rate)
+        # Transformer blocks
+        self.transformer_blocks = nn.ModuleList([Block(n_head, n_embd, dropout_rate) for _ in range(n_layer)])
+        # LayerNorm layer
+        self.final_layer_norm = nn.LayerNorm(n_embd)
+        # Linear layer
+        self.language_model_head = nn.Linear(n_embd, vocab_size)
+        # Weight tying between language model head and token embedding
+        self.token_embedding.weight = self.language_model_head.weight 
+        # Initialization of weights
+        self._initialize_weights()
 
-        self.transformer = nn.ModuleDict(dict(
-            wte = nn.Embedding(vocab_size, n_embd),
-            wpe = nn.Embedding(block_size, n_embd),
-            drop = nn.Dropout(dropout_rate),
-            h = nn.ModuleList([Block(n_head, n_embd, dropout_rate) for _ in range(n_layer)]),
-            ln_f = nn.LayerNorm(n_embd),
-        ))
-        self.lm_head = nn.Linear(n_embd, vocab_size)
-        # with weight tying when using torch.compile() some warnings get generated:
-        # "UserWarning: functional_call was passed multiple values for tied weights.
-        # This behavior is deprecated and will be an error in future versions"
-        # not 100% sure what this is, so far seems to be harmless. TODO investigate
-        self.transformer.wte.weight = self.lm_head.weight # https://paperswithcode.com/method/weight-tying
-
-        # init all weights
-        self.apply(self._init_weights)
-        # apply special scaled init to the residual projections, per GPT-2 paper
+    def _initialize_weights(self):
+        """Initialize weights with Glorot initialization.
+        """
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                torch.nn.init.xavier_uniform_(m.weight)
+                if m.bias is not None:
+                    torch.nn.init.zeros_(m.bias)
+            elif isinstance(m, nn.Embedding):
+                torch.nn.init.xavier_uniform_(m.weight)
         for pn, p in self.named_parameters():
             if pn.endswith('c_proj.weight'):
-                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * n_layer))
-
-    def _init_weights(self, module):
-        """Initialize weights with Glorot initialization, which
-        has performed well with the swish activation function (smooth and non-monotonic).
-        See https://paperswithcode.com/method/xavier-initialization
-        """
-        if isinstance(module, nn.Linear):
-            torch.nn.init.xavier_uniform_(module.weight)
-            if module.bias is not None:
-                torch.nn.init.zeros_(module.bias)
-        elif isinstance(module, nn.Embedding):
-            torch.nn.init.xavier_uniform_(module.weight)
+                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * self.n_layer))
 
     def forward(self, idx, targets=None):
         device = idx.device
         pos = torch.arange(0, idx.size()[1], dtype=torch.long, device=device).unsqueeze(0) # shape (1, idx.size()[1])
 
         # forward the GPT model itself
-        tok_emb = self.transformer.wte(idx) # token embeddings of shape (b, t, n_embd)
-        pos_emb = self.transformer.wpe(pos) # position embeddings of shape (1, t, n_embd)
-        x = self.transformer.drop(tok_emb + pos_emb)
-        for block in self.transformer.h:
+        tok_emb = self.token_embedding(idx) # token embeddings of shape (b, t, n_embd)
+        pos_emb = self.position_embedding(pos) # position embeddings of shape (1, t, n_embd)
+        x = self.dropout_layer(tok_emb + pos_emb)
+        for block in self.transformer_blocks:
             x = block(x)
-        x = self.transformer.ln_f(x)
+        x = self.final_layer_norm(x)
 
         if targets is not None:
             # if we are given some desired targets also calculate the loss
-            logits = self.lm_head(x)
+            logits = self.language_model_head(x)
             loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1), ignore_index=-1)
         else:
             # inference-time mini-optimization: only forward the lm_head on the very last position
-            logits = self.lm_head(x[:, [-1], :]) # note: using list [-1] to preserve the time dim
+            logits = self.language_model_head(x[:, [-1], :]) # note: using list [-1] to preserve the time dim
             loss = None
 
         return logits, loss
