@@ -6,7 +6,6 @@ import json
 from contextlib import nullcontext
 import torch
 from arguments import model_args, generate_args
-import argparse
 from model.model import GPT
 from tensorflow.keras.preprocessing.text import Tokenizer
 

@@ -1,7 +1,6 @@
 import os
 import glob
 import json
-import argparse
 from tqdm import tqdm
 import numpy as np
 from datetime import datetime

@@ -20,12 +20,16 @@ git clone https://github.com/alexrosen45/IpsumGPT
 #### Create and activate conda environment
 ```sh
 cd IpsumGPT
+conda update -n base conda
 conda env create -f environment.yml
 conda activate IpsumGPT
 python3 -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 ```
 #### Install PyTorch in your conda environment
-Follow the setup instructions [here](https://pytorch.org/). Install version 2.0 or above with conda and CUDA 11.7 or above. If your are unsure of which CUDA version to pick, run `nvidia-smi` in your conda environment and pick the version closest to 'CUDA Version' (it shouldn't need to be exactly the same).
+Follow the setup instructions [here](https://pytorch.org/). Install version 2.0 or above with conda and CUDA 11.7 or above. If your are unsure of which CUDA version to pick, run `nvidia-smi` in your conda environment and pick the version closest to 'CUDA Version' (it shouldn't need to be exactly the same). You can install without torchvision or torchaudio, and you command should ressemble
+```sh
+conda install pytorch pytorch-cuda=11.7 -c pytorch -c nvidia
+```
 
 # Usage
 #### Add a dataset
@@ -34,21 +38,21 @@ From the project's home directory, create a folder named `datasets` with a subdi
 #### Data Processing
 Suppose your raw data is located in the directory `datasets/ipsum/ipsum-dataset`. Fetch, tokenize, and process your raw data for training with
 ```sh
-python3 process.py
-  --data_dir="datasets/ipsum"
-  --data_folder="ipsum-dataset"
+python3 process.py \
+  --data_dir="datasets/ipsum" \
+  --data_folder="ipsum-dataset" \
   --split_ratio=0.8
 ```
 #### Model training
 Pick a name for your model and train it with
 ```sh
-python3 train.py
-  --out_dir="your-model-name-here"
+python3 train.py \
+  --out_dir="your-model-name-here" \
   --data_dir="datasets/ipsum"
 ```
 #### Text generation
 After training, generate text using your model with
 ```sh
-python3 generate.py
+python3 generate.py \
   --model="your-model-name-here"
 ```
