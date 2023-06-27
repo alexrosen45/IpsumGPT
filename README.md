@@ -1,6 +1,10 @@
 # IpsumGPT
 A modular implementation of a causal transformer with scaled dot-product attention, layer normalization, and residual connections.
 
+![causal attention image](https://github.com/alexrosen45/IpsumGPT/blob/master/assets/causal-attention.png)
+
+> Image taken from [this](https://arxiv.org/pdf/2210.13432.pdf) paper.
+
 # Prerequisites
 - Text dataset
 - Nvidia GPU with CUDA installed
